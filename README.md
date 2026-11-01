@@ -137,3 +137,43 @@ docs/                       # 产品 / 技术 / API / 方案四份设计文档
 - 资料只导入文字：支持 .md / .markdown / .txt / .docx；不支持 .doc、PDF、图片、网页
 - 只接入 DeepSeek（不做多模型切换）
 - 单机单用户，不做云同步
+
+---
+
+## 版本管理
+
+仓库用 git 管理，主线分支 `main`，发版用语义化版本 tag（当前 `v0.1.0`），变更记录见 [CHANGELOG.md](./CHANGELOG.md)。
+
+```bash
+# 第一次拿到仓库
+git init -b main            # 已初始化过则跳过
+node scripts/install-git-hooks.mjs   # 安装 pre-commit 钩子（提交前跑 npm run verify）
+
+# 日常：改完一段就提交
+npm run verify              # 类型检查 + schema-lint（钩子也会自动跑）
+git add -A
+git commit -m "feat: 一句话说清这次改了什么"
+
+# 发版
+git tag -a v0.1.1 -m "StudyFlow v0.1.1"
+git push --tags
+
+# 回看 / 回滚
+git log --oneline --decorate
+git show v0.1.0            # 看某个版本的完整改动
+git revert <commit>        # 撤销某次提交（保留历史）
+```
+
+约定：
+- `node_modules/`、`out/`、`dist/`、`.tmp-*`、`*.log` 不进仓库（见 `.gitignore`），依赖由 `package-lock.json` 锁定。
+- **API Key 存在本机 `%APPDATA%\StudyFlow`，不属于仓库内容**；提交前钩子 + `.gitignore` 都不会带上它。
+- `.shots/` 里的界面截图会入库，README 才能直接显示；改版式后重新 `node scripts/smoke.mjs scripts/shots-flow.js .shots` 覆盖即可。
+
+推送到远端（GitHub / Gitee 都行，需要先建空仓库）：
+
+```bash
+git remote add origin https://github.com/<你的账号>/studyflow.git
+git push -u origin main
+git push --tags
+```
+

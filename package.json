@@ -12,6 +12,7 @@
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "verify": "npm run typecheck && node scripts/schema-lint.mjs",
     "build": "electron-vite build",
     "smoke": "node scripts/schema-lint.mjs && npm run build && node scripts/fixtures.mjs && node scripts/smoke.mjs",
     "dist": "npm run build && electron-builder --win --dir"
