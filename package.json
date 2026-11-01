@@ -1,7 +1,7 @@
 {
   "name": "study-flow",
   "productName": "StudyFlow",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "AI 监督式学习进度桌面应用（DeepSeek 驱动）",
   "main": "./out/main/index.js",
   "license": "MIT",
