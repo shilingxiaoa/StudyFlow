@@ -15,9 +15,9 @@ export interface RecitationGrade {
   dimensions: RecitationDimensions
   /** 0–40，主进程折算 */
   score: number
-  /** ≤120 字 */
+  /** 完整句子的点评，默认不超过 300 字 */
   feedback: string
-  /** ≤40 字 */
+  /** 完整句子，默认不超过 80 字 */
   criticalGap: string
 }
 
@@ -25,6 +25,9 @@ function clamp01(value: number): number {
   if (!Number.isFinite(value)) return 0
   return Math.min(Math.max(value, 0), 1)
 }
+
+const FEEDBACK_MAX_CHARS = SCORING.feedbackMaxChars
+const CRITICAL_GAP_MAX_CHARS = SCORING.criticalGapMaxChars
 
 /** 维度达成度 → 40 分制（权重来自 contracts.SCORING，禁止在别处另写一份） */
 export function scoreFromDimensions(dimensions: RecitationDimensions): number {
@@ -37,11 +40,31 @@ export function scoreFromDimensions(dimensions: RecitationDimensions): number {
   return Math.min(Math.max(Math.round(raw), 0), SCORING.recitationTotal)
 }
 
+/**
+ * 规范化文本：合并空白，超长时按句子边界截断（绝不切在半句上）。
+ * 上限只用于兜底，正常由 prompt 控制长度。
+ */
 function cleanText(input: unknown, max: number): string {
-  return String(input ?? '')
+  const text = String(input ?? '')
     .replace(/\s+/g, ' ')
     .trim()
-    .slice(0, max)
+  if (text.length <= max) return text
+
+  const cut = text.slice(0, max)
+  const sentence = Math.max(
+    cut.lastIndexOf('。'),
+    cut.lastIndexOf('！'),
+    cut.lastIndexOf('？'),
+    cut.lastIndexOf('；'),
+    cut.lastIndexOf('!'),
+    cut.lastIndexOf('?'),
+    cut.lastIndexOf('.')
+  )
+  if (sentence >= max * 0.5) return cut.slice(0, sentence + 1)
+
+  const clause = Math.max(cut.lastIndexOf('，'), cut.lastIndexOf('、'), cut.lastIndexOf(','))
+  if (clause >= max * 0.5) return `${cut.slice(0, clause)}…`
+  return `${cut}…`
 }
 
 /** 调 AI 评分 + 本地折算 */
@@ -71,8 +94,8 @@ export async function gradeRecitation(
     example: clamp01(ai.dimensions.example),
     clarity: clamp01(ai.dimensions.clarity)
   }
-  const feedback = cleanText(ai.feedback, 120)
-  const criticalGap = cleanText(ai.critical_gap, 40)
+  const feedback = cleanText(ai.feedback, FEEDBACK_MAX_CHARS)
+  const criticalGap = cleanText(ai.critical_gap, CRITICAL_GAP_MAX_CHARS)
 
   if (feedback === '' && criticalGap === '') {
     throw new AppError('AI_BAD_OUTPUT', 'AI 返回的评分是空的，请重试')

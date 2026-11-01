@@ -201,8 +201,14 @@ export const GRADE_JSON_SCHEMA: Record<string, unknown> = {
         clarity: { type: 'number', description: '讲解清晰度 0-1' }
       }
     },
-    feedback: { type: 'string', description: '总评，120 字以内' },
-    critical_gap: { type: 'string', description: '最致命的一个知识缺口，40 字以内' }
+    feedback: {
+      type: 'string',
+      description: '总评，2–4 句完整的话，300 字以内，不要写到一半'
+    },
+    critical_gap: {
+      type: 'string',
+      description: '最致命的一个知识缺口，1–2 句完整的话，80 字以内，不要写到一半'
+    }
   }
 }
 

@@ -514,6 +514,9 @@ export const SCORING = {
   /** 问答每题最少字数：只挡住「哦」「不知道」这类，不惩罚简短回答 */
   minAnswerChars: 15,
   minFollowupChars: 15,
+  /** 结果页两段点评的兜底上限（正常由 prompt 控制长度，超长按句子边界截断） */
+  feedbackMaxChars: 400,
+  criticalGapMaxChars: 120,
 } as const;
 
 export const DAY_STATUS_LABEL: Record<DayStatus, string> = {
