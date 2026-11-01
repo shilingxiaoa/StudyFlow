@@ -1,0 +1,139 @@
+# StudyFlow · AI 监督式学习进度桌面应用
+
+把「我要学 X」变成「今天这几件事做完，进度条就往前走一格」。进度不是自己勾选的，而是**通过考试才算数**。
+
+- 计划：目标 → AI 拆成 30 个 Day，每个 Day ≈ 1 小时，3–5 个可执行任务
+- 检测：做完一个 Day 的任务 → 解锁考试（2 道客观题各 25 分 + 1 次费曼复述 50 分，5–10 分钟）
+- 进度：≥80 分全额通过（进度 +1 格），60–79 只给 60%（可重考），<60 不动
+- 复检：在「复盘统计」里随时抽 2 道旧题复查，答错一题**回退** 20%
+- 教案：进 Day 后可以「让 AI 备课」，按目标与资料写出分节讲解、练习、每个任务的具体步骤、易错点和自检清单（按天缓存，可重新备课）
+- 答疑：教案页底部可以直接提问，AI 对照这一天和你的资料回答
+- 资料：可以把 .md / .txt / .docx 教材导进来，生成计划、备课与出题时 AI 会参考原文（最多 3 份、每份前 5000 字）
+
+> 设计文档：`docs/01-产品设计.md`、`docs/02-技术设计.md`、`docs/03-DeepSeek-API-备忘.md`、`docs/04-技术方案.md`
+
+---
+
+## 技术栈
+
+| 层 | 选型 |
+|---|---|
+| 壳 | Electron 44 |
+| 构建 | electron-vite 6 + Vite 8 + TypeScript 7 |
+| 界面 | React 19 + 自研 hash 路由 + 自研 UI 组件 + 原生 CSS 设计令牌 |
+| 状态 | Zustand 5 |
+| 存储 | SQLite（sql.js WASM，零原生编译），落盘到用户数据目录 |
+| AI | DeepSeek `deepseek-flash`（= V4.1-Flash-1017），1M 上下文，不做 RAG |
+
+密钥用 Electron `safeStorage`（Windows 走 DPAPI）加密后存储，只有主进程能解密，渲染进程永远拿不到明文。
+
+---
+
+## 运行
+
+```bash
+npm install
+npm run dev        # 开发模式（主进程 + 渲染进程热更新）
+npm run typecheck  # 主进程 + 渲染进程类型检查
+npm run build      # 产物输出到 out/
+npm run smoke      # 真实 Electron 冒烟（42 项非 AI 链路检查，失败退出码 1）
+npm run dist       # 打包成 Windows 免安装目录（需 electron-builder）
+```
+
+> `npm run dev` / `npm run smoke` 都要求 `ELECTRON_RUN_AS_NODE` 未设置；某些终端（或被其他工具注入的环境）会带着它，导致 Electron 退化成 Node，报 `Cannot read properties of undefined (reading 'isPackaged')`。遇到时先 `Remove-Item Env:ELECTRON_RUN_AS_NODE`。
+
+首次启动会进入引导页，要求填写 **DeepSeek API Key**（[platform.deepseek.com](https://platform.deepseek.com) 获取）。Key 只在本机加密保存，没有 Key 时建目标、存计划、勾任务、统计、导出都能正常用，只有 AI 出题/评分会返回 `NO_API_KEY`。
+
+界面截图（`node scripts/smoke.mjs scripts/shots-flow.js .shots` 自动生成，脚本里 `console.log('[shot] <label>')` 即触发主进程截图）：
+
+| 学习看板 | 今日 Day（教案 / 任务清单两个 Tab） |
+|---|---|
+| ![](./.shots/dashboard.png) | ![](./.shots/day.png) |
+
+| 复盘统计 | 设置 |
+|---|---|
+| ![](./.shots/stats.png) | ![](./.shots/settings.png) |
+
+| 新建计划（手动任务清单 + 资料导入） | 每日教案（AI 备课） |
+|---|---|
+| ![](./.shots/plan-new.png) | ![](./.shots/lesson.png) |
+
+| 教案：任务步骤与易错点 | 教案：练习与自检 |
+|---|---|
+| ![](./.shots/lesson-ask.png) | ![](./.shots/lesson-practice.png) |
+
+---
+
+## 目录结构
+
+```
+src/
+├─ shared/contracts.ts      # 全局契约：类型 + IPC 通道 + 计分常量
+├─ main/                    # Electron 主进程
+│  ├─ index.ts              # 窗口与生命周期（含 SF_SMOKE 探针）
+│  ├─ preload.ts            # contextBridge 白名单
+│  ├─ ipc/                  # handle 包装 + 数据类/AI 类通道
+│  ├─ db/                   # schema.sql / database.ts(sql.js) / repo.ts
+│  └─ ai/                   # DeepSeek client / prompts / 计划 / 教案 / 出题 / 评分 / 费曼
+└─ renderer/                # React 界面
+   ├─ lib/                  # router / api / format
+   ├─ store/                # zustand
+   ├─ components/           # 设计令牌 + UI 组件库 + 布局 + 复检面板 + 教案面板 + Markdown
+   └─ pages/                # 看板 / 今日 / 考试 / 计划 / 统计 / 设置 / 引导
+scripts/
+├─ smoke.mjs                # 冒烟入口（启动 Electron 并解析结果）
+├─ smoke-flow.js            # 注入渲染进程的链路脚本（42 项断言）
+├─ shots-flow.js            # 造演示数据 + 逐页打点截图
+├─ shots-lesson.js          # 用已备好课的库拍教案截图
+└─ fixtures.mjs             # 生成导入测试素材（.md / .docx / .pdf）
+docs/                       # 产品 / 技术 / API / 方案四份设计文档
+```
+
+数据位置：`%APPDATA%\StudyFlow\studyflow.db`（导出文件在 `exports/`）。
+
+---
+
+## 验收状态
+
+已在本机用 `npm run smoke` 实跑（真实 Electron + sql.js 落盘，无 API Key）：
+
+| 项 | 状态 |
+|---|---|
+| 建目标 → 存计划（3 天 9 任务）→ 首屏数据 | ✅ |
+| 勾完任务 → Day 自动 `exam_ready` | ✅ |
+| 未配 Key 时 `exam:create` 返回 `NO_API_KEY`、未解锁 Day 被拦住 | ✅ |
+| 进度汇总 / 事件流 / 14 天统计 / Markdown 导出 | ✅ |
+| 复检入口可点，无历史考试时给出可读提示 | ✅ |
+| 删除目标后不留孤儿数据（统计归零） | ✅ |
+| 导入 .md / .docx → 解析正文 → 计划页可见、可移除 | ✅ |
+| 教案：未生成→empty、无 Key 被拦、未备课不能答疑 | ✅ |
+| 真实 Key 跑通备课 → 5 节讲解 / 3 道练习 / 4 组任务步骤 / 答疑 | ✅ |
+| 冒烟使用独立数据目录（不污染真实库） | ✅ |
+| 主题切换（dark/light/跟随系统）实时生效 | ✅ |
+| 五个页面渲染无控制台报错、无破图、截图已归档 | ✅ |
+| AI 真实链路（生成计划 / 出题 / 复述评分 / 教案 / 答疑） | ✅ 已用真实 Key 跑通（计划 30 天 21s、出题 2.7s、评分 1.0s、教案 5 节 18s / ¥0.013、答疑 1.4s） |
+
+---
+
+## 成本
+
+全部调用 `deepseek-flash`，空闲时段（非工作日 9:00–12:00、14:00–18:00）价格减半：
+
+| 项 | 空闲 | 高峰 |
+|---|---|---|
+| 输入（缓存未命中） | ¥1 / 百万 tokens | ¥2 |
+| 输入（缓存命中） | ¥0.02 / 百万 tokens | ¥0.04 |
+| 输出 | ¥4 / 百万 tokens | ¥8 |
+
+一个 30 天的学习目标，全流程约 **¥1–3/月**。教材等稳定内容放在 prompt 前缀，可吃满缓存命中价。
+
+---
+
+## 已知边界
+
+- 只支持文字输入（不做语音复述）
+- 教案按天生成并缓存：第一次要点「让 AI 备课」，重新备课会再花一次调用（约 ¥0.01–0.02）
+- 答疑消息只存在当前页面，刷新即清空（不写入数据库）
+- 资料只导入文字：支持 .md / .markdown / .txt / .docx；不支持 .doc、PDF、图片、网页
+- 只接入 DeepSeek（不做多模型切换）
+- 单机单用户，不做云同步

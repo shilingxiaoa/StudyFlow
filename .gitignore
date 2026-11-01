@@ -1,0 +1,10 @@
+node_modules/
+out/
+dist/
+release/
+*.log
+.tmp-*
+.DS_Store
+data/*.db
+data/*.db.bak
+*.tsbuildinfo

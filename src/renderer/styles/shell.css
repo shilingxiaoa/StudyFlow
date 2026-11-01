@@ -1,0 +1,236 @@
+/* ============================================================
+   StudyFlow · 启动屏 / 崩溃页 / 路由占位 的样式
+   （启动阶段 ui.css 也可能尚未加载，所以这里自带一份最小样式）
+   ============================================================ */
+
+.sf-boot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--s-8);
+  background-color: var(--c-bg);
+  background-image: var(--c-glow);
+}
+
+.sf-boot__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  max-width: 420px;
+  padding: var(--s-8) var(--s-6);
+  text-align: center;
+  background-color: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-2);
+  animation: sf-rise-in var(--dur-3) var(--ease);
+}
+
+.sf-boot__mark {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: var(--s-2);
+  color: #fff;
+  background-image: linear-gradient(160deg, var(--c-accent), var(--c-accent-press));
+  border-radius: 14px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.2) inset,
+    0 10px 24px rgba(91, 140, 255, 0.24);
+}
+
+.sf-boot__brand {
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-semibold);
+  letter-spacing: -0.02em;
+  color: var(--c-text);
+}
+
+.sf-boot__title {
+  font-size: var(--fs-base);
+  font-weight: var(--fw-medium);
+  color: var(--c-text);
+}
+
+.sf-boot__desc {
+  font-size: var(--fs-sm);
+  color: var(--c-text-2);
+  line-height: var(--lh-loose);
+  max-width: 34ch;
+}
+
+.sf-boot__progress {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+  font-size: var(--fs-sm);
+  color: var(--c-text-3);
+}
+
+.sf-boot__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+}
+
+/* ── 路由懒加载占位 ── */
+.sf-route-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  min-height: 40vh;
+  color: var(--c-text-3);
+  font-size: var(--fs-md);
+}
+
+/* ── 崩溃页（ErrorBoundary 兜底） ── */
+.sf-crash {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--s-8);
+  background-color: var(--c-bg);
+  background-image: var(--c-glow);
+}
+
+.sf-crash__panel {
+  width: 100%;
+  max-width: 560px;
+  padding: var(--s-6);
+  background-color: var(--c-surface);
+  border: 1px solid var(--c-danger-line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-2);
+}
+
+.sf-crash__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-4);
+  font-size: var(--fs-sm);
+  color: var(--c-text-2);
+  letter-spacing: 0.02em;
+}
+
+.sf-crash__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--c-danger);
+}
+
+.sf-crash__title {
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+  margin-bottom: var(--s-2);
+}
+
+.sf-crash__desc {
+  font-size: var(--fs-md);
+  color: var(--c-text-2);
+  line-height: var(--lh-loose);
+  margin-bottom: var(--s-4);
+}
+
+.sf-crash__detail {
+  margin: 0 0 var(--s-5);
+  padding: var(--s-3);
+  max-height: 180px;
+  overflow: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-normal);
+  color: var(--c-text-3);
+  background-color: var(--c-surface-sunken);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.sf-crash__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.sf-crash__btn {
+  height: var(--control-h-md);
+  padding: 0 var(--s-4);
+  font-family: inherit;
+  font-size: var(--fs-md);
+  color: var(--c-text);
+  background-color: var(--c-surface-sunken);
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-1) var(--ease-in-out),
+    border-color var(--dur-1) var(--ease-in-out);
+}
+
+.sf-crash__btn:hover {
+  background-color: var(--c-surface-hover);
+  border-color: var(--c-text-3);
+}
+
+.sf-crash__btn--primary {
+  color: var(--c-on-accent);
+  background-color: var(--c-accent);
+  border-color: var(--c-accent);
+}
+
+.sf-crash__btn--primary:hover {
+  background-color: var(--c-accent-hover);
+  border-color: var(--c-accent-hover);
+}
+
+/* ── 未找到页面 ── */
+.sf-notfound {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  min-height: 52vh;
+  text-align: center;
+}
+
+.sf-notfound__code {
+  font-family: var(--font-mono);
+  font-size: var(--fs-3xl);
+  font-weight: var(--fw-bold);
+  color: var(--c-text-3);
+  opacity: 0.5;
+  letter-spacing: 0.04em;
+}
+
+.sf-notfound__title {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+}
+
+.sf-notfound__desc {
+  font-size: var(--fs-sm);
+  color: var(--c-text-2);
+  max-width: 42ch;
+  line-height: var(--lh-loose);
+}
+
+.sf-notfound__actions {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}

@@ -1,0 +1,225 @@
+/* ============================================================
+   StudyFlow · 复检面板
+   ============================================================ */
+.sf-review__lead {
+  margin: 0 0 var(--s-3);
+  color: var(--c-text-2);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.sf-review__row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  margin-top: var(--s-3);
+}
+
+.sf-review__row:first-child {
+  margin-top: 0;
+}
+
+.sf-review__error {
+  margin: var(--s-2) 0 0;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--c-danger) 12%, transparent);
+  color: var(--c-danger);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.sf-review__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.sf-review__item {
+  padding: var(--s-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--c-surface) 70%, transparent);
+}
+
+.sf-review__stem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-3);
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--c-text);
+}
+
+.sf-review__stem-text {
+  flex: 1 1 auto;
+}
+
+.sf-review__index {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--c-accent) 18%, transparent);
+  color: var(--c-accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.sf-review__options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.sf-review__option {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  width: 100%;
+  padding: 9px var(--s-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--c-text);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease), background 0.15s var(--ease);
+}
+
+.sf-review__option:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--c-accent) 50%, var(--c-border));
+  background: color-mix(in srgb, var(--c-accent) 8%, transparent);
+}
+
+.sf-review__option.is-active {
+  border-color: var(--c-accent);
+  background: color-mix(in srgb, var(--c-accent) 14%, transparent);
+}
+
+.sf-review__option:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.sf-review__option-key {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  border: 1px solid var(--c-border);
+  color: var(--c-text-2);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.sf-review__option.is-active .sf-review__option-key {
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+}
+
+.sf-review__input {
+  width: 100%;
+  padding: 9px var(--s-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-sm);
+  background: var(--c-bg);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.sf-review__input:focus {
+  outline: none;
+  border-color: var(--c-accent);
+}
+
+.sf-review__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  padding: var(--s-3);
+  margin-bottom: var(--s-3);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--c-accent) 8%, transparent);
+  font-size: 13px;
+}
+
+.sf-review__delta {
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+.sf-review__delta.is-plus {
+  color: var(--c-success);
+}
+
+.sf-review__delta.is-minus {
+  color: var(--c-danger);
+}
+
+.sf-review__result-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.sf-review__result {
+  padding: var(--s-3);
+  border: 1px solid var(--c-border);
+  border-left-width: 3px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+}
+
+.sf-review__result.is-ok {
+  border-left-color: var(--c-success);
+}
+
+.sf-review__result.is-bad {
+  border-left-color: var(--c-danger);
+}
+
+.sf-review__result-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-1);
+}
+
+.sf-review__result-stem {
+  color: var(--c-text-2);
+  font-size: 12px;
+}
+
+.sf-review__line {
+  margin: 2px 0;
+  color: var(--c-text);
+  line-height: 1.6;
+}
+
+.sf-review__explain {
+  margin: var(--s-1) 0 0;
+  padding-top: var(--s-1);
+  border-top: 1px dashed var(--c-border);
+  color: var(--c-text-2);
+  line-height: 1.65;
+}

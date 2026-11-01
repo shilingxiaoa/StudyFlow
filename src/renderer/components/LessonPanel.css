@@ -1,0 +1,535 @@
+/* ============================================================
+   StudyFlow · AI 教案面板
+   surface + border + r-lg，配色全部走令牌，阅读宽度 820px。
+   ============================================================ */
+
+.sf-lesson {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  width: 100%;
+  max-width: 820px;
+}
+
+/* ---- 首屏骨架 ---- */
+.sf-lesson__loading-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.sf-lesson__loading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+/* ---- 头部 ---- */
+.sf-lesson__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding-bottom: var(--s-1);
+}
+
+.sf-lesson__head-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.sf-lesson__title {
+  margin: 0;
+  font-size: var(--fs-xl);
+  line-height: var(--lh-tight);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+}
+
+.sf-lesson__overview {
+  margin: 0;
+  max-width: 68ch;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.75;
+  white-space: pre-line;
+}
+
+.sf-lesson__head-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s-1);
+  flex-shrink: 0;
+  padding-top: var(--s-1);
+}
+
+.sf-lesson__updated {
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+  white-space: nowrap;
+}
+
+/* ---- 分节讲解 ---- */
+.sf-lesson__sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.sf-lesson__section-title {
+  color: var(--c-text);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+}
+
+.sf-lesson__body {
+  line-height: 1.75;
+}
+
+/* ---- 通用区块 ---- */
+.sf-lesson__block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.sf-lesson__block-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.sf-lesson__block-title {
+  margin: 0;
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.01em;
+}
+
+.sf-lesson__block-hint {
+  margin-left: auto;
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+}
+
+/* ---- 动手练一练 ---- */
+.sf-lesson__practices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sf-lesson__practice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-4);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--c-surface) 82%, var(--c-bg));
+}
+
+.sf-lesson__practice-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.sf-lesson__practice-index {
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.sf-lesson__practice-prompt {
+  color: var(--c-text);
+}
+
+.sf-lesson__practice-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.sf-lesson__practice-hint,
+.sf-lesson__practice-answer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-3);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--c-hairline);
+  background: var(--c-surface-sunken);
+}
+
+.sf-lesson__practice-answer {
+  border-color: var(--c-success-line);
+  background: var(--c-success-soft);
+}
+
+.sf-lesson__practice-tag {
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.08em;
+}
+
+/* ---- 任务步骤 ---- */
+.sf-lesson__guides {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.sf-lesson__guide-title {
+  margin: 0 0 var(--s-3);
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+}
+
+.sf-lesson__guide-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sf-lesson__guide-step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+}
+
+.sf-lesson__guide-num {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--r-full);
+  background: var(--c-accent-soft);
+  border: 1px solid var(--c-accent-line);
+  color: var(--c-accent);
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+.sf-lesson__guide-text {
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.75;
+}
+
+/* ---- 容易踩的坑 ---- */
+.sf-lesson__pits {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sf-lesson__pit {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border: 1px solid var(--c-warn-line);
+  border-radius: var(--r-md);
+  background: var(--c-warn-soft);
+}
+
+.sf-lesson__pit-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  border-radius: var(--r-full);
+  border: 1px solid var(--c-warn-line);
+  color: var(--c-warn);
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-bold);
+  line-height: 1;
+}
+
+.sf-lesson__pit-text {
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+  line-height: 1.75;
+}
+
+/* ---- 学完自检 ---- */
+.sf-lesson__checks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sf-lesson__check {
+  border-radius: var(--r-sm);
+  transition: background var(--dur-1) var(--ease);
+}
+
+.sf-lesson__check:hover {
+  background: var(--c-surface-hover);
+}
+
+.sf-lesson__check-label {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  cursor: pointer;
+}
+
+.sf-lesson__check-box {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
+  accent-color: var(--c-accent);
+  cursor: pointer;
+}
+
+.sf-lesson__check-text {
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.75;
+  transition: color var(--dur-1) var(--ease);
+}
+
+.sf-lesson__check.is-checked .sf-lesson__check-text {
+  color: var(--c-text-3);
+  text-decoration: line-through;
+  text-decoration-color: var(--c-text-3);
+}
+
+/* ---- 不懂就问 ---- */
+.sf-lesson__ask-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.sf-lesson__chat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: var(--s-1);
+  scrollbar-width: thin;
+}
+
+.sf-lesson__msg {
+  display: flex;
+  gap: var(--s-2);
+  align-items: flex-start;
+}
+
+.sf-lesson__msg-role {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 var(--s-1);
+  border-radius: var(--r-full);
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-medium);
+}
+
+.sf-lesson__msg--user .sf-lesson__msg-role {
+  background: var(--c-accent-soft);
+  border: 1px solid var(--c-accent-line);
+  color: var(--c-accent);
+}
+
+.sf-lesson__msg--ai .sf-lesson__msg-role {
+  background: var(--c-surface-sunken);
+  border: 1px solid var(--c-hairline);
+  color: var(--c-text-2);
+}
+
+.sf-lesson__msg-body {
+  min-width: 0;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--c-hairline);
+  background: var(--c-surface-sunken);
+  font-size: var(--fs-sm);
+  line-height: 1.75;
+}
+
+.sf-lesson__msg--user .sf-lesson__msg-body {
+  background: color-mix(in srgb, var(--c-accent-soft) 55%, var(--c-surface));
+  border-color: var(--c-accent-line);
+}
+
+.sf-lesson__msg-text {
+  margin: 0;
+  color: var(--c-text);
+  white-space: pre-line;
+}
+
+.sf-lesson__msg-thinking {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--c-text-3);
+}
+
+.sf-lesson__ask-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s-2);
+}
+
+/* ---- 底部 ---- */
+.sf-lesson__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding-top: var(--s-2);
+  border-top: 1px solid var(--c-hairline);
+}
+
+.sf-lesson__foot-hint {
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+}
+
+.sf-lesson__confirm-text {
+  margin: 0;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.75;
+}
+
+/* ---- 生成中 ---- */
+.sf-lesson__busy {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--c-accent-line);
+  border-radius: var(--r-md);
+  background: var(--c-accent-soft);
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+
+.sf-lesson__gen-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.sf-lesson__gen-stage {
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+}
+
+.sf-lesson__gen-row + .sf-lesson__gen-row {
+  margin-top: var(--s-3);
+}
+
+.sf-lesson__gen-note {
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+}
+
+/* ---- 空态介绍 ---- */
+.sf-lesson__intro-text {
+  margin: 0 0 var(--s-3);
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.75;
+}
+
+.sf-lesson__intro-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin: 0 0 var(--s-4);
+  padding: 0;
+  list-style: none;
+}
+
+.sf-lesson__intro-list > li {
+  position: relative;
+  padding-left: var(--s-4);
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.75;
+}
+
+.sf-lesson__intro-list > li::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: calc(0.875em - 2px);
+  width: 5px;
+  height: 5px;
+  border-radius: var(--r-full);
+  background: var(--c-accent);
+}
+
+.sf-lesson__intro-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.sf-lesson__intro-hint {
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+}
+
+.sf-lesson__failed {
+  /* 失败态直接复用 ErrorState 的外观，这里只留锚点 */
+}
+
+/* ---- 窄屏 ---- */
+@media (max-width: 720px) {
+  .sf-lesson__head {
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+
+  .sf-lesson__head-meta {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--s-3);
+    padding-top: 0;
+  }
+
+  .sf-lesson__foot {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s-1);
+  }
+}

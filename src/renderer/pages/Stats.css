@@ -1,0 +1,293 @@
+/* ============================================================
+   StudyFlow · 复盘统计
+   ============================================================ */
+
+.sf-stats-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-3);
+}
+
+.sf-stats-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-4);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  min-width: 0;
+}
+
+.sf-stats-kpi__label {
+  font-size: var(--fs-2xs);
+  color: var(--c-text-3);
+  letter-spacing: 0.02em;
+}
+
+.sf-stats-kpi__value {
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-semibold);
+  line-height: 1.15;
+  color: var(--c-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sf-stats-kpi__hint {
+  font-size: var(--fs-2xs);
+  color: var(--c-text-3);
+}
+
+.sf-stats-skeleton {
+  padding: var(--s-2) 0;
+}
+
+/* ---------- 柱状图 ---------- */
+
+.sf-stats-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.sf-stats-chart__baseline {
+  stroke: var(--c-border-strong);
+  stroke-width: 1;
+}
+
+.sf-stats-chart__grid {
+  stroke: var(--c-border);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.sf-stats-chart__tick {
+  fill: var(--c-text-3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.sf-stats-chart__unit {
+  fill: var(--c-text-3);
+  font-size: 10px;
+}
+
+.sf-stats-chart__bar {
+  opacity: 0.55;
+  transition: opacity var(--dur-1) var(--ease);
+}
+
+.sf-stats-chart__bar.is-today {
+  opacity: 1;
+}
+
+.sf-stats-chart__bar.is-empty {
+  opacity: 0.35;
+  fill: var(--c-border-strong);
+}
+
+.sf-stats-chart__group:hover .sf-stats-chart__bar {
+  opacity: 1;
+}
+
+.sf-stats-chart__value {
+  fill: var(--c-text-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  opacity: 0;
+  transition: opacity var(--dur-1) var(--ease);
+}
+
+.sf-stats-chart__group:hover .sf-stats-chart__value,
+.sf-stats-chart__bar.is-today + .sf-stats-chart__value {
+  opacity: 1;
+}
+
+.sf-stats-chart__date {
+  fill: var(--c-text-3);
+  font-size: 10px;
+}
+
+.sf-stats-chart__date.is-today {
+  fill: var(--c-accent);
+  font-weight: var(--fw-semibold);
+}
+
+.sf-stats-chart__legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-4);
+  margin-top: var(--s-2);
+  font-size: var(--fs-2xs);
+  color: var(--c-text-2);
+}
+
+.sf-stats-chart__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+.sf-stats-chart__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--c-accent);
+  opacity: 0.55;
+}
+
+.sf-stats-chart__dot.is-today {
+  opacity: 1;
+  box-shadow: 0 0 6px var(--c-glow);
+}
+
+/* ---------- 时间线 ---------- */
+
+.sf-stats-timeline {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sf-stats-timeline__item {
+  position: relative;
+  display: flex;
+  gap: var(--s-3);
+  padding: var(--s-2) 0 var(--s-3) 0;
+}
+
+.sf-stats-timeline__item::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 18px;
+  bottom: -2px;
+  width: 1px;
+  background: var(--c-hairline);
+}
+
+.sf-stats-timeline__item:last-child::before {
+  display: none;
+}
+
+.sf-stats-timeline__dot {
+  flex: none;
+  margin-top: 6px;
+  width: 9px;
+  height: 9px;
+  border-radius: var(--r-full);
+  background: var(--c-text-3);
+  box-shadow: 0 0 0 3px var(--c-surface);
+}
+
+.sf-stats-timeline__item.is-plus .sf-stats-timeline__dot {
+  background: var(--c-success);
+}
+
+.sf-stats-timeline__item.is-minus .sf-stats-timeline__dot {
+  background: var(--c-danger);
+}
+
+.sf-stats-timeline__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.sf-stats-timeline__head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.sf-stats-timeline__delta {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text-2);
+  min-width: 34px;
+}
+
+.sf-stats-timeline__delta.is-plus {
+  color: var(--c-success);
+}
+
+.sf-stats-timeline__delta.is-minus {
+  color: var(--c-danger);
+}
+
+.sf-stats-timeline__reason {
+  font-size: var(--fs-sm);
+  color: var(--c-text);
+}
+
+.sf-stats-timeline__link {
+  font-size: var(--fs-2xs);
+  color: var(--c-accent);
+  text-decoration: none;
+}
+
+.sf-stats-timeline__link:hover {
+  text-decoration: underline;
+}
+
+.sf-stats-timeline__time {
+  margin-left: auto;
+  font-size: var(--fs-2xs);
+}
+
+.sf-stats-timeline__detail {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--c-text-2);
+  line-height: 1.55;
+  word-break: break-word;
+}
+
+/* ---------- 导出 ---------- */
+
+.sf-stats-export {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+}
+
+.sf-stats-export__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.sf-stats-export__info p {
+  margin: 0;
+  font-size: var(--fs-sm);
+}
+
+@media (max-width: 880px) {
+  .sf-stats-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sf-stats-export {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-stats-chart__bar,
+  .sf-stats-chart__value {
+    transition: none;
+  }
+}

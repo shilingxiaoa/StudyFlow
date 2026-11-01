@@ -1,0 +1,186 @@
+/* ============================================================
+   StudyFlow · 设计令牌
+   深色为默认；[data-theme="light"] 覆盖。
+   规则：组件里只准用变量，不写死颜色/间距/圆角。
+   ============================================================ */
+
+:root {
+  /* ── 语义色板（深色） ─────────────────────────────── */
+  --c-accent: #5b8cff;
+  --c-accent-hover: #6f9bff;
+  --c-accent-press: #4a79e8;
+  --c-accent-soft: rgba(91, 140, 255, 0.14);
+  --c-accent-line: rgba(91, 140, 255, 0.4);
+  --c-on-accent: #ffffff;
+
+  --c-success: #3ecf8e;
+  --c-success-soft: rgba(62, 207, 142, 0.14);
+  --c-success-line: rgba(62, 207, 142, 0.38);
+
+  --c-warn: #f5a524;
+  --c-warn-soft: rgba(245, 165, 36, 0.14);
+  --c-warn-line: rgba(245, 165, 36, 0.38);
+
+  --c-danger: #f5555d;
+  --c-danger-hover: #ff6b72;
+  --c-danger-soft: rgba(245, 85, 93, 0.14);
+  --c-danger-line: rgba(245, 85, 93, 0.38);
+
+  --c-info: #6ba8ff;
+  --c-info-soft: rgba(107, 168, 255, 0.14);
+  --c-info-line: rgba(107, 168, 255, 0.38);
+
+  /* ── 底色 / 表面 ──────────────────────────────────── */
+  --c-bg: #0e1116;
+  --c-bg-elevated: #12161d;
+  --c-surface: #161b23;
+  --c-surface-hover: #1b212b;
+  --c-surface-raised: #1d242e;
+  --c-surface-sunken: #0b0e13;
+  --c-overlay: rgba(6, 8, 12, 0.66);
+  --c-hairline: rgba(255, 255, 255, 0.06);
+  --c-glow: radial-gradient(1200px 420px at 18% -10%, rgba(91, 140, 255, 0.13), transparent 70%);
+
+  --c-border: #232a35;
+  --c-border-strong: #2e3744;
+  --c-border-focus: rgba(91, 140, 255, 0.55);
+
+  --c-text: #e6eaf0;
+  --c-text-2: #8a93a6;
+  --c-text-3: #5d6577;
+  --c-text-inverse: #0e1116;
+
+  /* ── 圆角 ─────────────────────────────────────────── */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --r-full: 999px;
+
+  /* ── 间距（4 的倍数） ─────────────────────────────── */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-16: 64px;
+
+  /* ── 字号 / 行高 ──────────────────────────────────── */
+  --fs-2xs: 10px;
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-md: 13px;
+  --fs-base: 14px;
+  --fs-lg: 16px;
+  --fs-xl: 20px;
+  --fs-2xl: 26px;
+  --fs-3xl: 34px;
+
+  --lh-tight: 1.25;
+  --lh-normal: 1.5;
+  --lh-loose: 1.7;
+
+  --fw-normal: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* ── 字体 ─────────────────────────────────────────── */
+  --font-sans: system-ui, "Microsoft YaHei UI", "PingFang SC", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+
+  /* ── 阴影（深色靠「边框 + 微光」造层次，阴影只用于浮层） ── */
+  --sh-1: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --sh-2: 0 6px 20px rgba(0, 0, 0, 0.38);
+  --sh-3: 0 24px 64px rgba(0, 0, 0, 0.55);
+  --sh-accent: 0 6px 18px rgba(91, 140, 255, 0.28);
+
+  /* ── 动效 ─────────────────────────────────────────── */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-1: 120ms;
+  --dur-2: 180ms;
+  --dur-3: 280ms;
+
+  /* ── 布局尺寸 ─────────────────────────────────────── */
+  --sidebar-w: 218px;
+  --sidebar-w-rail: 68px;
+  --header-h: 56px;
+  --content-max: 1080px;
+  --control-h-sm: 28px;
+  --control-h-md: 34px;
+  --control-h-lg: 42px;
+
+  /* ── 层级 ─────────────────────────────────────────── */
+  --z-sticky: 10;
+  --z-modal: 50;
+  --z-toast: 60;
+
+  /* ── 滚动条 ───────────────────────────────────────── */
+  --c-scrollbar: rgba(255, 255, 255, 0.12);
+  --c-scrollbar-hover: rgba(255, 255, 255, 0.22);
+
+  color-scheme: dark;
+}
+
+/* ============================================================
+   浅色主题
+   ============================================================ */
+[data-theme='light'] {
+  --c-accent: #3d6fe0;
+  --c-accent-hover: #4f7ee8;
+  --c-accent-press: #315fc9;
+  --c-accent-soft: rgba(61, 111, 224, 0.1);
+  --c-accent-line: rgba(61, 111, 224, 0.34);
+  --c-on-accent: #ffffff;
+
+  --c-success: #1a9e69;
+  --c-success-soft: rgba(26, 158, 105, 0.12);
+  --c-success-line: rgba(26, 158, 105, 0.32);
+
+  --c-warn: #b87508;
+  --c-warn-soft: rgba(184, 117, 8, 0.12);
+  --c-warn-line: rgba(184, 117, 8, 0.3);
+
+  --c-danger: #d93a44;
+  --c-danger-hover: #c62f39;
+  --c-danger-soft: rgba(217, 58, 68, 0.1);
+  --c-danger-line: rgba(217, 58, 68, 0.3);
+
+  --c-info: #2b7cc4;
+  --c-info-soft: rgba(43, 124, 196, 0.1);
+  --c-info-line: rgba(43, 124, 196, 0.3);
+
+  --c-bg: #f5f7fb;
+  --c-bg-elevated: #ffffff;
+  --c-surface: #ffffff;
+  --c-surface-hover: #f2f5fa;
+  --c-surface-raised: #ffffff;
+  --c-surface-sunken: #eef1f7;
+  --c-overlay: rgba(23, 30, 44, 0.38);
+  --c-hairline: rgba(16, 24, 40, 0.06);
+  --c-glow: radial-gradient(1200px 420px at 18% -10%, rgba(61, 111, 224, 0.1), transparent 70%);
+
+  --c-border: #e2e8f1;
+  --c-border-strong: #cfd8e5;
+  --c-border-focus: rgba(61, 111, 224, 0.5);
+
+  --c-text: #18202e;
+  --c-text-2: #5c6779;
+  --c-text-3: #8d97a8;
+  --c-text-inverse: #ffffff;
+
+  --sh-1: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --sh-2: 0 8px 24px rgba(16, 24, 40, 0.08);
+  --sh-3: 0 24px 64px rgba(16, 24, 40, 0.16);
+  --sh-accent: 0 6px 18px rgba(61, 111, 224, 0.22);
+
+  --c-scrollbar: rgba(16, 24, 40, 0.16);
+  --c-scrollbar-hover: rgba(16, 24, 40, 0.28);
+
+  color-scheme: light;
+}

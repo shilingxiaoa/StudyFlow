@@ -1,0 +1,154 @@
+/* ============================================================
+   StudyFlow · 引导向导
+   ============================================================ */
+
+/* ── 顶部步骤条 ─────────────────────────────────────── */
+.sf-setup__steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sf-setup__step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+  padding: var(--s-3) var(--s-4);
+  background-color: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  color: var(--c-text-2);
+  transition:
+    border-color var(--dur-2) var(--ease-in-out),
+    background-color var(--dur-2) var(--ease-in-out),
+    color var(--dur-2) var(--ease-in-out);
+}
+
+.sf-setup__dot {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--r-full);
+  background-color: var(--c-surface-sunken);
+  border: 1px solid var(--c-border);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--c-text-2);
+}
+
+.sf-setup__label {
+  min-width: 0;
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sf-setup__step.is-active {
+  border-color: var(--c-accent-line);
+  background-color: var(--c-accent-soft);
+  color: var(--c-text);
+}
+
+.sf-setup__step.is-active .sf-setup__dot {
+  background-color: var(--c-accent);
+  border-color: var(--c-accent);
+  color: var(--c-on-accent);
+  font-weight: var(--fw-semibold);
+}
+
+.sf-setup__step.is-done {
+  border-color: var(--c-success-line);
+  background-color: var(--c-success-soft);
+  color: var(--c-text);
+}
+
+.sf-setup__step.is-done .sf-setup__dot {
+  background-color: var(--c-success);
+  border-color: var(--c-success);
+  color: var(--c-text-inverse);
+}
+
+/* ── 表单布局 ─────────────────────────────────────── */
+.sf-setup__stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.sf-setup__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+
+.sf-setup__status {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+/* ── 完成页摘要 ───────────────────────────────────── */
+.sf-setup__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.sf-setup__summary li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-4);
+  padding: var(--s-3) var(--s-4);
+}
+
+.sf-setup__summary li + li {
+  border-top: 1px solid var(--c-border);
+}
+
+.sf-setup__summary span {
+  flex: none;
+  width: 84px;
+  font-size: var(--fs-sm);
+  color: var(--c-text-3);
+}
+
+.sf-setup__summary strong {
+  min-width: 0;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-medium);
+  color: var(--c-text);
+  overflow-wrap: anywhere;
+}
+
+.sf-setup__done-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s-2);
+  margin-top: var(--s-4);
+}
+
+/* ── 窄窗口 ───────────────────────────────────────── */
+@media (max-width: 720px) {
+  .sf-setup__steps {
+    grid-template-columns: 1fr;
+  }
+
+  .sf-setup__grid {
+    grid-template-columns: 1fr;
+  }
+}

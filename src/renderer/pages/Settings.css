@@ -1,0 +1,192 @@
+/* ============================================================
+   StudyFlow · 设置
+   ============================================================ */
+
+.sf-settings__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.sf-settings__form--row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--s-4);
+  align-items: start;
+}
+
+.sf-settings__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--c-hairline);
+}
+
+.sf-settings__status {
+  min-width: 0;
+  font-size: var(--fs-sm);
+}
+
+.sf-settings__ok {
+  color: var(--c-success);
+}
+
+.sf-settings__bad {
+  color: var(--c-danger);
+}
+
+.sf-settings__buttons {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex: none;
+}
+
+/* ---------- 行式设置 ---------- */
+
+.sf-settings__rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.sf-settings__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--c-hairline);
+}
+
+.sf-settings__row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.sf-settings__row:first-child {
+  padding-top: 0;
+}
+
+.sf-settings__row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sf-settings__row-title {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--c-text);
+}
+
+.sf-settings__row-desc {
+  font-size: var(--fs-2xs);
+  color: var(--c-text-3);
+  line-height: 1.55;
+}
+
+.sf-settings__row-desc .sf-faint {
+  margin-left: 4px;
+}
+
+.sf-settings__row .sf-field {
+  flex: none;
+}
+
+.sf-settings__num {
+  width: 96px;
+}
+
+.sf-settings__code {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  color: var(--c-text-2);
+  padding: 1px var(--s-1);
+  border-radius: var(--r-xs);
+  background: var(--c-surface-sunken);
+  border: 1px solid var(--c-border);
+}
+
+.sf-settings__modal-text {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--c-text-2);
+  line-height: 1.65;
+}
+
+/* ---------- 开关 ---------- */
+
+.sf-settings-switch {
+  position: relative;
+  flex: none;
+  width: 42px;
+  height: 24px;
+  padding: 0;
+  border-radius: var(--r-full);
+  border: 1px solid var(--c-border-strong);
+  background: var(--c-surface-sunken);
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease);
+}
+
+.sf-settings-switch:focus-visible {
+  outline: 2px solid var(--c-border-focus);
+  outline-offset: 2px;
+}
+
+.sf-settings-switch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sf-settings-switch.is-on {
+  background: var(--c-accent);
+  border-color: var(--c-accent);
+}
+
+.sf-settings-switch__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--r-full);
+  background: var(--c-text);
+  box-shadow: var(--sh-1);
+  transition: transform var(--dur-2) var(--ease), background var(--dur-1) var(--ease);
+}
+
+.sf-settings-switch.is-on .sf-settings-switch__thumb {
+  background: var(--c-on-accent);
+  transform: translateX(18px);
+}
+
+@media (max-width: 880px) {
+  .sf-settings__form--row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sf-settings__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sf-settings__buttons {
+    justify-content: flex-end;
+  }
+
+  .sf-settings__row {
+    flex-wrap: wrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-settings-switch,
+  .sf-settings-switch__thumb {
+    transition: none;
+  }
+}

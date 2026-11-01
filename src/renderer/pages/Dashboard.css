@@ -1,0 +1,309 @@
+/* ============================================================
+   StudyFlow · 学习看板
+   进度环与分段条是视觉主角，其余信息退到第二层。
+   ============================================================ */
+
+/* ---------- 顶部大区 ---------- */
+.dash-hero__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-8);
+  padding: var(--s-6);
+}
+
+.dash-hero__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.dash-hero__eyebrow {
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-text-3);
+}
+
+.dash-hero__title {
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  color: var(--c-text);
+  overflow-wrap: anywhere;
+}
+
+.dash-hero__meta {
+  font-size: var(--fs-md);
+  color: var(--c-text-2);
+}
+
+.dash-hero__sub {
+  font-size: var(--fs-sm);
+  color: var(--c-text-3);
+}
+
+.dash-hero__ring {
+  flex: none;
+}
+
+.dash-ring__value {
+  display: block;
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-ring__label {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--fs-2xs);
+  color: var(--c-text-3);
+}
+
+/* ---------- 30 天分段条 ---------- */
+.dash-plan__bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.dash-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-4);
+}
+
+.dash-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--fs-xs);
+  color: var(--c-text-3);
+}
+
+.dash-legend__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-full);
+  background-color: var(--c-border-strong);
+}
+
+.dash-legend__dot--success {
+  background-color: var(--c-success);
+}
+
+.dash-legend__dot--warn {
+  background-color: var(--c-warn);
+}
+
+.dash-legend__dot--accent {
+  background-color: var(--c-accent);
+}
+
+.dash-legend__dot--danger {
+  background-color: var(--c-danger);
+}
+
+.dash-legend__dot--neutral {
+  background-color: var(--c-border-strong);
+}
+
+/* ---------- 下一步 ---------- */
+.dash-cta__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-6);
+  flex-wrap: wrap;
+}
+
+.dash-cta__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.dash-cta__eyebrow {
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+
+.dash-cta__title {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+  overflow-wrap: anywhere;
+}
+
+.dash-cta__hint {
+  font-size: var(--fs-sm);
+  color: var(--c-text-2);
+}
+
+.dash-cta__side {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex: none;
+  flex-wrap: wrap;
+}
+
+/* ---------- 三格统计 ---------- */
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+
+.dash-stat__inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-5);
+}
+
+.dash-stat__label {
+  font-size: var(--fs-xs);
+  color: var(--c-text-3);
+}
+
+.dash-stat__value {
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--lh-tight);
+}
+
+.dash-stat__unit {
+  margin-left: 4px;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-normal);
+  color: var(--c-text-3);
+}
+
+.dash-stat__hint {
+  font-size: var(--fs-xs);
+  color: var(--c-text-3);
+}
+
+/* ---------- 最近进度 ---------- */
+.dash-timeline__pad {
+  padding: var(--s-5);
+}
+
+.dash-events {
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-events__item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-5);
+  border-top: 1px solid var(--c-hairline, var(--c-border));
+}
+
+.dash-events__item:first-child {
+  border-top: none;
+}
+
+.dash-events__delta {
+  flex: none;
+  min-width: 52px;
+  padding: 2px 8px;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  background-color: var(--c-surface-sunken);
+  color: var(--c-text-2);
+}
+
+.dash-events__delta.is-up {
+  background-color: var(--c-success-soft);
+  color: var(--c-success);
+}
+
+.dash-events__delta.is-down {
+  background-color: var(--c-danger-soft);
+  color: var(--c-danger);
+}
+
+.dash-events__delta.is-flat {
+  background-color: var(--c-surface-sunken);
+  color: var(--c-text-3);
+}
+
+.dash-events__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dash-events__reason {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--c-text);
+}
+
+.dash-events__detail {
+  font-size: var(--fs-xs);
+  color: var(--c-text-2);
+  overflow-wrap: anywhere;
+}
+
+.dash-events__time {
+  flex: none;
+  font-size: var(--fs-xs);
+  color: var(--c-text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-footnote {
+  font-size: var(--fs-xs);
+  color: var(--c-text-3);
+  text-align: center;
+  padding-bottom: var(--s-2);
+}
+
+/* ---------- 窄屏 ---------- */
+@media (max-width: 900px) {
+  .dash-hero__inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s-5);
+  }
+
+  .dash-hero__ring {
+    align-self: center;
+  }
+
+  .dash-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .dash-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dash-cta__row {
+    align-items: stretch;
+  }
+
+  .dash-cta__side {
+    justify-content: space-between;
+  }
+}

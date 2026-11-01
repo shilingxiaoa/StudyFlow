@@ -1,0 +1,39 @@
+{
+  "name": "study-flow",
+  "productName": "StudyFlow",
+  "version": "0.1.0",
+  "description": "AI 监督式学习进度桌面应用（DeepSeek 驱动）",
+  "main": "./out/main/index.js",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/electron-vite-run.mjs dev",
+    "start": "node scripts/electron-vite-run.mjs preview",
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json",
+    "typecheck:web": "tsc --noEmit -p tsconfig.web.json",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "build": "electron-vite build",
+    "smoke": "node scripts/schema-lint.mjs && npm run build && node scripts/fixtures.mjs && node scripts/smoke.mjs",
+    "dist": "npm run build && electron-builder --win --dir"
+  },
+  "dependencies": {
+    "dayjs": "^1.11.23",
+    "jszip": "^3.10.2",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "sql.js": "^1.15.1",
+    "zod": "^4.6.7",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/sql.js": "^1.4.11",
+    "@vitejs/plugin-react": "^6.1.2",
+    "electron": "^44.9.0",
+    "electron-vite": "^6.0.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4"
+  }
+}

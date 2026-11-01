@@ -1,0 +1,328 @@
+/* ============================================================
+   StudyFlow · 今日学习
+   ============================================================ */
+
+/* ---------- 标题行 ---------- */
+.today-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.today-title__text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.today-head__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.today-timer {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  padding: 4px 10px;
+  border-radius: var(--r-full);
+  background-color: var(--c-surface-sunken);
+  color: var(--c-text-2);
+}
+
+.today-timer__label {
+  font-size: var(--fs-2xs);
+  color: var(--c-text-3);
+}
+
+.today-timer__clock {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text);
+}
+
+/* ---------- 面包屑 ---------- */
+.today-crumb {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: calc(var(--s-2) * -1);
+  font-size: var(--fs-xs);
+  color: var(--c-text-3);
+}
+
+.today-crumb__link {
+  color: var(--c-text-3);
+  font-size: inherit;
+  transition: color var(--dur-1) var(--ease-in-out);
+}
+
+.today-crumb__link:hover {
+  color: var(--c-accent);
+}
+
+.today-crumb__sep {
+  color: var(--c-text-3);
+}
+
+.today-crumb__current {
+  color: var(--c-text-2);
+}
+
+/* ---------- 教案 / 任务清单 切换 ---------- */
+.today-tabs {
+  margin-top: calc(var(--s-3) * -1);
+  margin-bottom: calc(var(--s-2) * -1);
+}
+
+/* ---------- 全部完成提示 ---------- */
+.today-banner {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  border: 1px solid var(--c-success-line);
+  background-color: var(--c-success-soft);
+  animation: sf-fade-in var(--dur-3) var(--ease);
+}
+
+.today-banner__title {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--c-success);
+}
+
+.today-banner__text {
+  font-size: var(--fs-sm);
+  color: var(--c-text-2);
+}
+
+/* ---------- 今日目标 ---------- */
+.today-goal__text {
+  font-size: var(--fs-base);
+  line-height: var(--lh-loose);
+  color: var(--c-text);
+}
+
+.today-checks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--c-hairline, var(--c-border));
+}
+
+.today-checks__item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+}
+
+.today-checks__num {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: var(--r-full);
+  background-color: var(--c-accent-soft);
+  color: var(--c-accent);
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.today-checks__text {
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+  color: var(--c-text-2);
+}
+
+/* ---------- 任务清单 ---------- */
+.today-tasks__pad {
+  padding: var(--s-5);
+}
+
+.today-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.today-task {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-5);
+  border-top: 1px solid var(--c-hairline, var(--c-border));
+  transition: opacity var(--dur-1) var(--ease-in-out);
+}
+
+.today-task:first-child {
+  border-top: none;
+}
+
+.today-task__box {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  margin: 2px 0 0;
+  accent-color: var(--c-accent);
+  cursor: pointer;
+}
+
+.today-task__main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.today-task__title {
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+  color: var(--c-text);
+  overflow-wrap: anywhere;
+  transition: color var(--dur-1) var(--ease-in-out);
+}
+
+.today-task__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--fs-xs);
+  color: var(--c-text-3);
+}
+
+.today-task__kind {
+  padding: 1px 6px;
+  border-radius: var(--r-xs);
+  background-color: var(--c-surface-sunken);
+  color: var(--c-text-2);
+}
+
+.today-task__min {
+  font-variant-numeric: tabular-nums;
+}
+
+.today-task__state {
+  padding: 1px 6px;
+  border-radius: var(--r-xs);
+  background-color: var(--c-accent-soft);
+  color: var(--c-accent);
+}
+
+.today-task__flag {
+  flex: none;
+  opacity: 0;
+  transition: opacity var(--dur-1) var(--ease-in-out);
+}
+
+.today-task:hover .today-task__flag,
+.today-task__flag:focus-visible {
+  opacity: 1;
+}
+
+.today-task.is-done .today-task__title {
+  color: var(--c-text-3);
+  text-decoration: line-through;
+}
+
+.today-task.is-done .today-task__meta {
+  opacity: 0.6;
+}
+
+.today-task.is-done,
+.today-task.is-doing {
+  background-color: transparent;
+}
+
+.today-task.is-saving {
+  opacity: 0.6;
+}
+
+/* ---------- 底部操作条 ---------- */
+.today-bar {
+  position: sticky;
+  bottom: var(--s-2);
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  background-color: var(--c-bg-elevated);
+  box-shadow: var(--sh-2);
+}
+
+.today-bar__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: var(--fs-sm);
+  color: var(--c-text);
+}
+
+.today-bar__ok {
+  color: var(--c-success);
+}
+
+.today-bar__stage {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--c-accent);
+}
+
+.today-bar__hint {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--fs-xs);
+  color: var(--c-text-3);
+}
+
+.today-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex: none;
+  flex-wrap: wrap;
+}
+
+.today-bar__score {
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text-2);
+}
+
+.today-error__back {
+  margin-top: var(--s-3);
+}
+
+/* ---------- 窄屏 ---------- */
+@media (max-width: 720px) {
+  .today-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .today-bar__actions {
+    justify-content: flex-end;
+  }
+
+  .today-task__flag {
+    opacity: 1;
+  }
+}

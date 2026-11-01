@@ -1,0 +1,10 @@
+# 统一换行：仓库内 LF，检出到 Windows 时按需转换
+* text=auto eol=lf
+
+# 二进制资源不要做换行/文本 diff
+*.png binary
+*.ico binary
+*.jpg binary
+*.db binary
+*.docx binary
+*.wasm binary

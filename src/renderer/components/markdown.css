@@ -1,0 +1,153 @@
+/* ============================================================
+   StudyFlow · 轻量 Markdown 渲染样式
+   只作用于 .sf-md 内部，配色 / 圆角 / 间距全部走令牌。
+   ============================================================ */
+
+.sf-md {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.sf-md > :first-child {
+  margin-top: 0;
+}
+
+.sf-md > :last-child {
+  margin-bottom: 0;
+}
+
+.sf-md h4,
+.sf-md h5 {
+  margin: var(--s-2) 0 0;
+  color: var(--c-text);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.01em;
+}
+
+.sf-md h4 {
+  font-size: var(--fs-md);
+  line-height: var(--lh-tight);
+}
+
+.sf-md h5 {
+  font-size: var(--fs-sm);
+  line-height: var(--lh-tight);
+  color: var(--c-text-2);
+}
+
+.sf-md p {
+  margin: 0;
+  color: var(--c-text);
+  white-space: pre-line;
+}
+
+/* ---- 列表 ---- */
+.sf-md .sf-md__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin: 0;
+  padding-left: 1.25em;
+  list-style: none;
+}
+
+.sf-md ul.sf-md__list > li {
+  position: relative;
+}
+
+.sf-md ul.sf-md__list > li::before {
+  content: '';
+  position: absolute;
+  left: -1em;
+  top: calc(0.875em - 2px);
+  width: 4px;
+  height: 4px;
+  border-radius: var(--r-full);
+  background: var(--c-text-3);
+}
+
+.sf-md ol.sf-md__list > li {
+  position: relative;
+  counter-increment: sf-md-order;
+}
+
+.sf-md ol.sf-md__list {
+  counter-reset: sf-md-order;
+}
+
+.sf-md ol.sf-md__list > li::before {
+  content: counter(sf-md-order) '.';
+  position: absolute;
+  left: -1.35em;
+  color: var(--c-text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.sf-md .sf-md__list--nested {
+  margin-top: var(--s-1);
+  padding-left: 1.25em;
+  gap: var(--s-1);
+}
+
+/* ---- 引用 ---- */
+.sf-md blockquote {
+  margin: 0;
+  padding: var(--s-2) var(--s-3);
+  border-left: 2px solid var(--c-accent);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  background: var(--c-accent-soft);
+  color: var(--c-text-2);
+  white-space: pre-line;
+}
+
+/* ---- 代码 ---- */
+.sf-md code {
+  padding: 0.1em 0.35em;
+  border-radius: var(--r-xs);
+  background: var(--c-surface-sunken);
+  border: 1px solid var(--c-hairline);
+  color: var(--c-text);
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+.sf-md .sf-md__pre {
+  margin: 0;
+  padding: var(--s-3);
+  overflow-x: auto;
+  border-radius: var(--r-md);
+  border: 1px solid var(--c-border);
+  background: var(--c-surface-sunken);
+}
+
+.sf-md .sf-md__pre code {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-normal);
+  white-space: pre;
+}
+
+/* ---- 行内强调与链接 ---- */
+.sf-md strong {
+  color: var(--c-text);
+  font-weight: var(--fw-semibold);
+}
+
+.sf-md a {
+  color: var(--c-accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--c-accent-line);
+}
+
+.sf-md a:hover {
+  color: var(--c-accent-hover);
+  border-bottom-color: var(--c-accent-hover);
+}

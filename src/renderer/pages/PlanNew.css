@@ -1,0 +1,444 @@
+/* ============================================================
+   StudyFlow · 计划生成与确认
+   ============================================================ */
+
+.sf-plan__intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.sf-plan__facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-2);
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--c-surface-sunken);
+  border: 1px solid var(--c-border);
+}
+
+.sf-plan__facts > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sf-plan__facts span {
+  font-size: var(--fs-2xs);
+  color: var(--c-text-3);
+}
+
+.sf-plan__facts strong {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sf-plan__tips {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sf-plan__tips li {
+  position: relative;
+  padding-left: var(--s-4);
+  font-size: var(--fs-sm);
+  color: var(--c-text-2);
+  line-height: 1.6;
+}
+
+.sf-plan__tips li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-full);
+  background: var(--c-accent);
+}
+
+.sf-plan__start {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--s-4);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--c-hairline);
+}
+
+/* ---------- 生成中 ---------- */
+
+.sf-plan__gen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.sf-plan__gen-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.sf-plan__gen-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.sf-plan__gen-text p {
+  margin: 0;
+}
+
+.sf-plan__phase {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-medium);
+  color: var(--c-text);
+  animation: sf-plan-phase-in var(--dur-2) var(--ease) both;
+}
+
+.sf-plan__bar {
+  position: relative;
+  height: 8px;
+  border-radius: var(--r-full);
+  background: var(--c-surface-sunken);
+  overflow: hidden;
+  border: 1px solid var(--c-border);
+}
+
+.sf-plan__bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-full);
+  background: linear-gradient(90deg, var(--c-accent), color-mix(in srgb, var(--c-accent) 55%, var(--c-success)));
+  transition: width 1200ms var(--ease);
+}
+
+/* ---------- 预览统计条 ---------- */
+
+.sf-plan__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-2);
+}
+
+.sf-plan__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+}
+
+.sf-plan__stat span {
+  font-size: var(--fs-2xs);
+  color: var(--c-text-3);
+}
+
+.sf-plan__stat strong {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+}
+
+/* ---------- 天数卡片 ---------- */
+
+.sf-plan__days {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.sf-plan-day {
+  border-radius: var(--r-md);
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  overflow: hidden;
+  transition: border-color var(--dur-1) var(--ease), background var(--dur-1) var(--ease);
+}
+
+.sf-plan-day.is-open {
+  border-color: var(--c-accent-line);
+  background: var(--c-surface-raised);
+}
+
+.sf-plan-day__head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  width: 100%;
+  padding: var(--s-3);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sf-plan-day__head:focus-visible {
+  outline: 2px solid var(--c-border-focus);
+  outline-offset: -2px;
+}
+
+.sf-plan-day__head:hover {
+  background: var(--c-surface-hover);
+}
+
+.sf-plan-day__index {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.04em;
+  color: var(--c-accent);
+  padding: 2px var(--s-2);
+  border-radius: var(--r-xs);
+  background: var(--c-accent-soft);
+  white-space: nowrap;
+}
+
+.sf-plan-day__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-medium);
+  color: var(--c-text);
+}
+
+.sf-plan-day__meta {
+  font-size: var(--fs-2xs);
+  color: var(--c-text-3);
+  white-space: nowrap;
+}
+
+.sf-plan-day__chevron {
+  display: inline-flex;
+  color: var(--c-text-3);
+  transition: transform var(--dur-1) var(--ease);
+}
+
+.sf-plan-day.is-open .sf-plan-day__chevron {
+  transform: rotate(180deg);
+}
+
+.sf-plan-day__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: 0 var(--s-3) var(--s-3);
+  animation: sf-plan-body-in var(--dur-2) var(--ease) both;
+}
+
+.sf-plan-day__goal {
+  margin: 0;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-sm);
+  background: var(--c-surface-sunken);
+  border-left: 2px solid var(--c-accent);
+  font-size: var(--fs-sm);
+  color: var(--c-text-2);
+  line-height: 1.6;
+}
+
+.sf-plan-day__checkpoints {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sf-plan-day__checkpoints li {
+  position: relative;
+  padding-left: var(--s-4);
+  font-size: var(--fs-sm);
+  color: var(--c-text-2);
+  line-height: 1.55;
+}
+
+.sf-plan-day__checkpoints li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--c-success);
+  font-size: var(--fs-xs);
+}
+
+.sf-plan-day__tasks {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--c-hairline);
+}
+
+.sf-plan-day__task {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--c-hairline);
+}
+
+.sf-plan-day__task:last-child {
+  border-bottom: 0;
+}
+
+.sf-plan-day__task-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+  color: var(--c-text);
+}
+
+.sf-plan-day__task-minutes {
+  font-size: var(--fs-2xs);
+  color: var(--c-text-3);
+  white-space: nowrap;
+}
+
+.sf-plan-day__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ---------- 保存区 ---------- */
+
+.sf-plan__save {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-4);
+  border-radius: var(--r-md);
+  border: 1px solid var(--c-border);
+  background: var(--c-bg-elevated);
+}
+
+.sf-plan__save p {
+  margin: 0;
+  min-width: 0;
+}
+
+@keyframes sf-plan-phase-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sf-plan-body-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 880px) {
+  .sf-plan__facts,
+  .sf-plan__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sf-plan__save {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sf-plan-day__meta {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-plan__phase,
+  .sf-plan-day__body {
+    animation: none;
+  }
+
+  .sf-plan__bar-fill {
+    transition: none;
+  }
+}
+
+/* ---------- 学习资料导入 ---------- */
+.sf-plan__mats-empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  font-size: var(--fs-sm);
+  color: var(--c-text-2);
+}
+
+.sf-plan__mats-empty p {
+  margin: 0;
+}
+
+.sf-plan__mats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sf-plan__mat {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background-color: var(--c-surface-sunken);
+}
+
+.sf-plan__mat-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.sf-plan__mat-name {
+  font-size: var(--fs-sm);
+  color: var(--c-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sf-plan__mat-meta {
+  font-size: var(--fs-xs);
+  color: var(--c-text-3);
+  font-variant-numeric: tabular-nums;
+}
