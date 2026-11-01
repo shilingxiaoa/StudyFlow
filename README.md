@@ -146,7 +146,9 @@ docs/                       # 产品 / 技术 / API / 方案四份设计文档
 
 ## 版本管理
 
-仓库用 git 管理，主线分支 `main`，发版用语义化版本 tag（当前 `v0.1.0`），变更记录见 [CHANGELOG.md](./CHANGELOG.md)。
+仓库用 git 管理，主线分支 `main`，发版用语义化版本 tag（当前 `v1.1.0`；历史 tag：`v1.0.0`、`v0.1.0`），每次发版在 [CHANGELOG.md](./CHANGELOG.md) 记一条。
+
+版本约定：`1.x` 都是可用版本，功能新增升次版本号（`1.1.0`），只修 bug 升修订号（`1.1.1`）。
 
 ```bash
 # 第一次拿到仓库
@@ -158,13 +160,13 @@ npm run verify              # 类型检查 + schema-lint（钩子也会自动跑
 git add -A
 git commit -m "feat: 一句话说清这次改了什么"
 
-# 发版
-git tag -a v0.1.1 -m "StudyFlow v0.1.1"
+# 发版（先改 package.json / layout.tsx 的版本号，再提交）
+git tag -a v1.1.1 -m "StudyFlow v1.1.1"
 git push --tags
 
 # 回看 / 回滚
 git log --oneline --decorate
-git show v0.1.0            # 看某个版本的完整改动
+git show v1.1.0            # 看某个版本的完整改动
 git revert <commit>        # 撤销某次提交（保留历史）
 ```
 
