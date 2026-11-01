@@ -167,7 +167,7 @@ export const EXAM_JSON_SCHEMA: Record<string, unknown> = {
   }
 }
 
-// ───────────────────────────── 复述评分 ─────────────────────────────
+// ───────────────────────────── 问答评分 ─────────────────────────────
 
 export const gradeAiZ = z.object({
   dimensions: z

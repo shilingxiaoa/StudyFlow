@@ -43,14 +43,14 @@ function materialExcerpt(materials: readonly { title: string; content: string }[
     .slice(0, MATERIAL_EXCERPT_LIMIT)
 }
 
-/** 复述题定位：认 recitationId，也认 examId（复述题由 exam 反查） */
+/** 问答题定位：认 recitationId，也认 examId（问答题由 exam 反查） */
 async function recitationViewFromPayload(payload: unknown): Promise<RecitationView> {
   const recitationId = readId(payload, 'recitationId', 'id')
   if (recitationId !== '') return repo.getRecitation(recitationId)
 
   const examId = requireId(payload, '考试 id', 'examId')
   const task = await repo.getRecitationByExam(examId)
-  if (!task) throw new AppError('NOT_FOUND', '这次考试还没有复述题')
+  if (!task) throw new AppError('NOT_FOUND', '这次考试还没有问答题')
   return repo.getRecitation(task.id)
 }
 
@@ -198,20 +198,20 @@ export function registerAiHandlers(): void {
     return { exam, questions, recitation: stripKeyPoints(recitation) }
   })
 
-  // ───────── 费曼复述 ─────────
+  // ───────── 问答（第一个问题 + 追问） ─────────
   handle<unknown, RecitationView>(IPC.RECITATION_START, async (payload) => recitationViewFromPayload(payload))
 
   handle<unknown, RecitationView>(IPC.RECITATION_SAY, async (payload) => {
     const view = await recitationViewFromPayload(payload)
-    if (view.status === 'graded') throw new AppError('VALIDATION', '这次复述已经评分完成')
+    if (view.status === 'graded') throw new AppError('VALIDATION', '这次问答已经评分完成')
     if (view.followUp) throw new AppError('VALIDATION', 'AI 已经提出追问了，请直接回答后提交')
 
-    const text = requireString(payload, 'text', '讲解内容')
+    const text = requireString(payload, 'text', '回答内容')
     const count = charCount(text)
-    if (count < SCORING.minExplainChars) {
+    if (count < SCORING.minAnswerChars) {
       throw new AppError(
         'VALIDATION',
-        `讲解至少 ${SCORING.minExplainChars} 字（当前 ${count} 字），讲清楚再让 AI 追问`
+        `回答至少 ${SCORING.minAnswerChars} 字（当前 ${count} 字），一两句话就够`
       )
     }
 
@@ -240,11 +240,11 @@ export function registerAiHandlers(): void {
 
   handle<unknown, ExamGradeResult>(IPC.RECITATION_SUBMIT, async (payload) => {
     const view = await recitationViewFromPayload(payload)
-    if (view.status === 'graded') throw new AppError('VALIDATION', '这次复述已经评分完成')
-    if (!view.followUp) throw new AppError('VALIDATION', '请先提交讲解，等 AI 追问后再提交评分')
+    if (view.status === 'graded') throw new AppError('VALIDATION', '这次问答已经评分完成')
+    if (!view.followUp) throw new AppError('VALIDATION', '请先回答第一个问题，等 AI 追问后再提交评分')
 
     const answerText = pickString(payload, 'text', 'answer')?.trim() ?? ''
-    if (answerText === '') throw new AppError('VALIDATION', '请先回答 AI 的追问，再提交评分')
+    if (answerText === '') throw new AppError('VALIDATION', '请先回答追问，再提交评分')
     const count = charCount(answerText)
     if (count < SCORING.minFollowupChars) {
       throw new AppError(
@@ -258,7 +258,7 @@ export function registerAiHandlers(): void {
     if (!examBefore) throw new AppError('NOT_FOUND', '考试不存在')
     if (examBefore.status === 'graded') throw new AppError('VALIDATION', '这次考试已经结算过了')
     if (examBefore.objectiveScore === null) {
-      throw new AppError('VALIDATION', '请先提交客观题答案，再提交复述评分')
+      throw new AppError('VALIDATION', '请先提交客观题答案，再提交问答评分')
     }
     const day = await repo.getDayDetail(examBefore.dayId)
     if (!day) throw new AppError('NOT_FOUND', '这一天不存在')

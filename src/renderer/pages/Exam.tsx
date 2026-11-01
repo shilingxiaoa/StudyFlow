@@ -1,6 +1,6 @@
 /* ============================================================
-   StudyFlow · 考试 + 费曼复述（#/exam/:examId）
-   单页三步：客观题 → 费曼复述（讲解 + 学生追问）→ 结果
+   StudyFlow · 考试 + 问答（#/exam/:examId）
+   单页三步：客观题 → 问答（AI 提问 + 追问）→ 结果
    ============================================================ */
 import { useEffect, useState } from 'react'
 import type { JSX, KeyboardEvent as ReactKeyboardEvent } from 'react'
@@ -42,14 +42,14 @@ type Stage = 'objective' | 'recitation' | 'result'
 
 const STEPS: { key: Stage; label: string }[] = [
   { key: 'objective', label: '客观题' },
-  { key: 'recitation', label: '费曼复述' },
+  { key: 'recitation', label: '问答' },
   { key: 'result', label: '结果' }
 ]
 
 const DIMENSIONS: { key: keyof RecitationDimensions; label: string; hint: string; weight: number }[] = [
   { key: 'accuracy', label: '准确性', hint: '概念有没有说错', weight: SCORING.recitationWeights.accuracy },
   { key: 'coverage', label: '完整性', hint: '要点覆盖了几成', weight: SCORING.recitationWeights.coverage },
-  { key: 'example', label: '举例', hint: '有没有自己的例子', weight: SCORING.recitationWeights.example },
+  { key: 'example', label: '举例/迁移', hint: '能举例更好，不强制', weight: SCORING.recitationWeights.example },
   { key: 'clarity', label: '清晰度', hint: '结构清楚、不堆术语', weight: SCORING.recitationWeights.clarity }
 ]
 
@@ -178,12 +178,12 @@ export default function ExamPage({ examId }: ExamProps): JSX.Element {
           .catch(() => undefined)
 
         if (payload.exam.status === 'graded') {
-          // 历史结果：补一次复述视图（可能失败，失败就只显示总分）
+          // 历史结果：补一次问答视图（可能失败，失败就只显示总分）
           try {
             const recitation = await call<RecitationView>(IPC.RECITATION_START, { examId: currentExamId })
             if (alive) setView(recitation)
           } catch {
-            /* 没有复述明细也能看总分 */
+            /* 没有问答明细也能看总分 */
           }
           if (alive) setStage('result')
         } else if (payload.exam.status === 'objective_done') {
@@ -240,7 +240,7 @@ export default function ExamPage({ examId }: ExamProps): JSX.Element {
   const allAnswered = questions.length > 0 && answeredCount === questions.length
   const explainBody = explainText.trim()
   const explainCount = charCount(explainBody)
-  const explainEnough = explainCount >= SCORING.minExplainChars
+  const explainEnough = explainCount >= SCORING.minAnswerChars
   const followBody = followText.trim()
   const followCount = charCount(followBody)
   const followEnough = followCount >= SCORING.minFollowupChars
@@ -418,7 +418,7 @@ export default function ExamPage({ examId }: ExamProps): JSX.Element {
                 <span className="exam-result__total">/ 100</span>
               </p>
               <p className="exam-result__split">
-                客观 {objectiveScore ?? '—'} / {SCORING.objectiveTotal} · 复述 {recitationScore ?? '—'} /{' '}
+                客观 {objectiveScore ?? '—'} / {SCORING.objectiveTotal} · 问答 {recitationScore ?? '—'} /{' '}
                 {SCORING.recitationTotal}
               </p>
             </div>
@@ -488,8 +488,8 @@ export default function ExamPage({ examId }: ExamProps): JSX.Element {
 
         {dimensions ? (
           <Card
-            title="费曼复述"
-            subtitle={`复述得分 ${recitationScore ?? '—'} / ${SCORING.recitationTotal}`}
+            title="问答"
+            subtitle={`问答得分 ${recitationScore ?? '—'} / ${SCORING.recitationTotal}`}
           >
             <ul className="exam-dims">
               {DIMENSIONS.map((item) => {
@@ -529,9 +529,9 @@ export default function ExamPage({ examId }: ExamProps): JSX.Element {
             ) : null}
           </Card>
         ) : (
-          <Card title="费曼复述" subtitle="这次没有留下复述明细">
+          <Card title="问答" subtitle="这次没有留下问答明细">
             <p className="exam-hint">
-              复述得分 {recitationScore ?? '—'} / {SCORING.recitationTotal}。重新做一次检测，可以拿到四维度的点评。
+              问答得分 {recitationScore ?? '—'} / {SCORING.recitationTotal}。重新做一次检测，可以拿到四维度的点评。
             </p>
           </Card>
         )}
@@ -558,7 +558,7 @@ export default function ExamPage({ examId }: ExamProps): JSX.Element {
     )
   }
 
-  // ---- 费曼复述 ----
+  // ---- 问答 ----
   const renderRecitation = (): JSX.Element => {
     if (viewError) {
       return (
@@ -578,7 +578,7 @@ export default function ExamPage({ examId }: ExamProps): JSX.Element {
         <Card>
           <div className="exam-loading">
             <Spinner size={16} />
-            <span>正在准备复述场景…</span>
+            <span>正在准备问题…</span>
           </div>
           <Skeleton lines={4} height={16} />
         </Card>
@@ -604,9 +604,9 @@ export default function ExamPage({ examId }: ExamProps): JSX.Element {
 
     if (view.status === 'graded') {
       return (
-        <Card title="复述已评分">
+        <Card title="问答已评分">
           <p className="exam-hint">
-            复述得分 {view.score ?? '—'} / {SCORING.recitationTotal}。
+            问答得分 {view.score ?? '—'} / {SCORING.recitationTotal}。
           </p>
           <div className="exam-inline-actions">
             <Button onClick={() => setStage('result')}>查看结果</Button>
@@ -624,17 +624,17 @@ export default function ExamPage({ examId }: ExamProps): JSX.Element {
           <Card className="exam-recite" flush>
             <div className="exam-recite__inner">
               <div className="exam-prompt">
-                <span className="exam-prompt__avatar">学生</span>
+                <span className="exam-prompt__avatar">助教</span>
                 <p className="exam-prompt__text">{view.prompt}</p>
               </div>
-              <p className="exam-note">讲解时不要看书。想到哪说到哪，但要让对方听懂。</p>
+              <p className="exam-note">别翻书，想到什么说什么。说清因果就够，不用长篇大论。</p>
               <div className="exam-compose">
                 <TextArea
                   rows={11}
                   value={explainText}
                   disabled={sending}
                   autoFocus
-                  placeholder="先说结论，再解释为什么，最后举一个自己的例子。"
+                  placeholder="一两句话回答就行：结论 + 为什么。有例子可以顺手带上，没有也不扣分。"
                   onChange={(event) => setExplainText(event.target.value)}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
@@ -642,11 +642,11 @@ export default function ExamPage({ examId }: ExamProps): JSX.Element {
                       if (explainEnough && !sending) void submitExplain()
                     }
                   }}
-                  aria-label="讲解内容"
+                  aria-label="回答内容"
                 />
                 <div className="exam-counter">
                   <span className={`exam-counter__count ${explainEnough ? 'is-ok' : ''}`}>
-                    {explainCount} 字 / 最少 {SCORING.minExplainChars} 字
+                    {explainCount} 字 / 最少 {SCORING.minAnswerChars} 字
                   </span>
                   <KeyHint keys="Ctrl+Enter">提交</KeyHint>
                 </div>
@@ -656,14 +656,14 @@ export default function ExamPage({ examId }: ExamProps): JSX.Element {
           </Card>
           <footer className="exam-bar">
             <div className="exam-bar__info">
-              <span>阶段 A · 讲解</span>
+              <span>阶段 A · 回答第一个问题</span>
               <span className="exam-bar__hint">
-                {explainEnough ? '讲完了就提交，AI 学生会追问一个问题。' : `还差 ${SCORING.minExplainChars - explainCount} 字。`}
+                {explainEnough ? '答完就提交，助教会再追问一个。' : `还差 ${SCORING.minAnswerChars - explainCount} 字。`}
               </span>
             </div>
             <div className="exam-bar__actions">
               <Button onClick={() => void submitExplain()} loading={sending} disabled={!explainEnough}>
-                提交讲解
+                回答问题
               </Button>
             </div>
           </footer>
@@ -682,7 +682,7 @@ export default function ExamPage({ examId }: ExamProps): JSX.Element {
                   className={`exam-bubble exam-bubble--${message.role}`}
                   key={`${index}-${message.at}`}
                 >
-                  <span className="exam-bubble__avatar">{message.role === 'user' ? '你' : '学生'}</span>
+                  <span className="exam-bubble__avatar">{message.role === 'user' ? '你' : '助教'}</span>
                   <div className="exam-bubble__body">
                     <p className="exam-bubble__text">{message.text}</p>
                   </div>
@@ -690,21 +690,21 @@ export default function ExamPage({ examId }: ExamProps): JSX.Element {
               ))}
               {view.followUp && !view.messages.some((message) => message.role === 'student') ? (
                 <div className="exam-bubble exam-bubble--student">
-                  <span className="exam-bubble__avatar">学生</span>
+                  <span className="exam-bubble__avatar">助教</span>
                   <div className="exam-bubble__body">
                     <p className="exam-bubble__text">{view.followUp}</p>
                   </div>
                 </div>
               ) : null}
             </div>
-            <p className="exam-note">学生只问了这一个点。别翻书，把没讲清的地方补上。</p>
+            <p className="exam-note">助教只追问这一个点。别翻书，直接回答。</p>
             <div className="exam-compose">
               <TextArea
                 rows={6}
                 value={followText}
                 disabled={sending}
                 autoFocus
-                placeholder="补充说明这个概念，或者讲一个更具体的例子。"
+                placeholder="接着回答就行，一两句话也可以。"
                 onChange={(event) => setFollowText(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
@@ -728,7 +728,7 @@ export default function ExamPage({ examId }: ExamProps): JSX.Element {
           <div className="exam-bar__info">
             <span>阶段 B · 回答追问</span>
             <span className="exam-bar__hint">
-              {followEnough ? '提交后会按准确性、完整性、举例、清晰度打分。' : `还差 ${SCORING.minFollowupChars - followCount} 字。`}
+              {followEnough ? '提交后按准确性、完整性、举例/迁移、清晰度打分。' : `还差 ${SCORING.minFollowupChars - followCount} 字。`}
             </span>
           </div>
           <div className="exam-bar__actions">
@@ -748,9 +748,9 @@ export default function ExamPage({ examId }: ExamProps): JSX.Element {
       return (
         <>
           <Card title="客观题已提交" subtitle={`客观题得分 ${exam?.objectiveScore ?? '—'} / ${SCORING.objectiveTotal}`}>
-            <p className="exam-hint">这次检测的客观题已经交过了，接着把费曼复述做完就会结算。</p>
+            <p className="exam-hint">这次检测的客观题已经交过了，接着把问答做完就会结算。</p>
             <div className="exam-inline-actions">
-              <Button onClick={() => void enterRecitation()}>进入费曼复述</Button>
+              <Button onClick={() => void enterRecitation()}>进入问答</Button>
             </div>
           </Card>
         </>
@@ -873,12 +873,12 @@ export default function ExamPage({ examId }: ExamProps): JSX.Element {
             <span className="exam-bar__hint">
               {objectiveResult
                 ? `客观题得分 ${objectiveResult.objectiveScore} / ${SCORING.objectiveTotal}`
-                : '客观题占 50 分，提交后不能改答案。'}
+                : '客观题占 {SCORING.objectiveTotal} 分，提交后不能改答案。'}
             </span>
           </div>
           <div className="exam-bar__actions">
             {objectiveResult ? (
-              <Button onClick={() => void enterRecitation()}>进入费曼复述</Button>
+              <Button onClick={() => void enterRecitation()}>进入问答</Button>
             ) : (
               <Button
                 onClick={() => void submitObjective()}
@@ -897,7 +897,7 @@ export default function ExamPage({ examId }: ExamProps): JSX.Element {
   return (
     <Page
       title="Day 检测"
-      subtitle={day ? `Day ${day.index} · ${day.title}` : '客观题 + 费曼复述，约 5–8 分钟'}
+      subtitle={day ? `Day ${day.index} · ${day.title}` : '客观题 + 问答，约 4–6 分钟'}
       actions={
         <Button variant="ghost" size="sm" onClick={() => navigate(backTarget)}>
           返回今日学习

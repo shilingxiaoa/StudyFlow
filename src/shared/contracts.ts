@@ -209,7 +209,7 @@ export interface RecitationMessage {
   at: string;
 }
 
-/** 前端可见的复述状态（不含隐藏要点） */
+/** 前端可见的问答状态（不含隐藏要点） */
 export interface RecitationView {
   id: string;
   examId: string;
@@ -498,16 +498,22 @@ export interface RendererApi {
 // ───────────────────────────── 业务常量 ─────────────────────────────
 
 export const SCORING = {
-  objectivePerQuestion: 25,
-  objectiveTotal: 50,
-  recitationTotal: 50,
-  recitationWeights: { accuracy: 18, coverage: 12, example: 10, clarity: 6 },
+  /** 客观题：3 道一起出（2 单选 + 1 填空），每题 20 分 */
+  objectivePerQuestion: 20,
+  objectiveTotal: 60,
+  objectiveCount: 3,
+  /** 问答（原来的费曼复述改成了 AI 提问、你来回答） */
+  recitationTotal: 40,
+  recitationQuestionCount: 2,
+  /** 举例/迁移只是加分项，不强制 */
+  recitationWeights: { accuracy: 20, coverage: 10, example: 6, clarity: 4 },
   passLine: 80,
   partialLine: 60,
   partialCredit: 0.6,
   reviewPenalty: -0.2,
-  minExplainChars: 120,
-  minFollowupChars: 40,
+  /** 问答每题最少字数：只挡住「哦」「不知道」这类，不惩罚简短回答 */
+  minAnswerChars: 15,
+  minFollowupChars: 15,
 } as const;
 
 export const DAY_STATUS_LABEL: Record<DayStatus, string> = {

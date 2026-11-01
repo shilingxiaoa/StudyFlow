@@ -82,7 +82,7 @@ function normalizeDay(day: PlanDayAi, index: number, dailyMinutes: number): Gene
   }
   if (tasks.length < 3) {
     // 少于 3 个任务时补一条自测任务，避免一天只有一个大块
-    tasks.push({ title: '用 3 句话复述今天的内容并记录疑问', kind: 'review', estMinutes: 15 })
+    tasks.push({ title: '用 3 句话回答今天的自检问题并记录疑问', kind: 'review', estMinutes: 15 })
   }
 
   const minutes = balanceTaskMinutes(

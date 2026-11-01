@@ -27,7 +27,7 @@ const DEFAULT_TIMEOUT_MS = 120_000
 export const FOLLOWUP_TIMEOUT_MS = 45_000
 /** 30 天计划输出长，给足时间（文档 4.1 口径 180s） */
 export const PLAN_TIMEOUT_MS = 180_000
-/** 出题 / 复述评分（文档 4.1 口径 120s） */
+/** 出题 / 问答评分（文档 4.1 口径 120s） */
 export const EXAM_TIMEOUT_MS = 120_000
 const MAX_RETRIES = 3
 

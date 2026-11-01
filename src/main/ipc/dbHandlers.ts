@@ -235,7 +235,7 @@ export function registerDbHandlers(): void {
     if (!exam) throw new AppError('NOT_FOUND', '考试不存在')
     const questions = await repo.listQuestions(examId)
     const recitation = await repo.getRecitationByExam(examId)
-    if (!recitation) throw new AppError('NOT_FOUND', '这次考试还没有复述题')
+    if (!recitation) throw new AppError('NOT_FOUND', '这次考试还没有问答题')
     return { exam, questions, recitation: stripKeyPoints(recitation) }
   })
 

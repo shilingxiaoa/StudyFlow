@@ -61,7 +61,13 @@ child.on('exit', (code) => {
   } catch {
     // 日志写不进去不影响结果判定
   }
-  const line = stdout.split(/\r?\n/).find((item) => item.startsWith('[smoke] {'))
+  // 探针既可能直接打在 stdout，也可能经渲染进程 console-message 转发（前缀 `[smoke:console:n] `、后缀 ` (:行号)`）
+  const raw = stdout
+    .split(/\r?\n/)
+    .filter((item) => item.includes('[smoke] {'))
+    .map((item) => item.slice(item.indexOf('[smoke] {') + '[smoke] '.length))
+    .pop()
+  const line = raw === undefined ? undefined : raw.slice(0, raw.lastIndexOf('}') + 1)
   if (!line) {
     console.error(`\n[smoke] 没拿到探针输出，退出码 ${code}`)
     if (stderr.trim() !== '') console.error(stderr.split(/\r?\n/).slice(-20).join('\n'))
@@ -69,9 +75,10 @@ child.on('exit', (code) => {
   }
   let report
   try {
-    report = JSON.parse(line.slice('[smoke] '.length))
+    report = JSON.parse(line)
   } catch (error) {
     console.error('[smoke] 结果解析失败', error)
+    console.error('[smoke] 原始行长度', line.length, '尾部', JSON.stringify(line.slice(-80)))
     process.exit(1)
   }
 

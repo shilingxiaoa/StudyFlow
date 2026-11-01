@@ -1661,7 +1661,7 @@ export async function submitObjective(
   return { exam: updated, perQuestion, objectiveScore }
 }
 
-/** 客观题明细（供复述结算时回传前端） */
+/** 客观题明细（供问答结算时回传前端） */
 export async function getObjectiveDetail(examId: string): Promise<ExamObjectiveResult['perQuestion']> {
   await ensureReady()
   const rows = all<Row>('SELECT * FROM question WHERE exam_id = ? ORDER BY idx ASC', [examId])
@@ -1743,7 +1743,7 @@ export async function finishExam(
       const scoreText = `第 ${dayIdx} 天《${dayTitle}》总分 ${totalScore} 分`
       const detail =
         status === 'passed'
-          ? `${scoreText}，通过（客观 ${objectiveScore} + 复述 ${recitationScore}）`
+          ? `${scoreText}，通过（客观 ${objectiveScore} + 问答 ${recitationScore}）`
           : status === 'partial'
             ? `${scoreText}，部分通过（≥${SCORING.partialLine} 分），可重考刷新成绩`
             : `${scoreText}，未通过（<${SCORING.partialLine} 分），建议复习后重考`
@@ -1768,7 +1768,7 @@ export async function insertRecitation(
   const id = nowId()
   const at = iso()
   const text = String(prompt ?? '').trim()
-  if (text === '') throw new AppError('VALIDATION', '复述题面不能为空')
+  if (text === '') throw new AppError('VALIDATION', '问答题目不能为空')
   run(
     `INSERT INTO recitation (id, exam_id, day_id, prompt, key_points, messages, follow_up, status, dimensions, score, feedback, critical_gap, created_at, graded_at)
      VALUES (?, ?, ?, ?, ?, '[]', NULL, 'awaiting_explain', NULL, NULL, NULL, NULL, ?, NULL)`,
@@ -1776,14 +1776,14 @@ export async function insertRecitation(
   )
   persist()
   const row = get<Row>('SELECT * FROM recitation WHERE id = ?', [id])
-  if (!row) throw new AppError('DB', '创建复述题失败')
+  if (!row) throw new AppError('DB', '创建问答题失败')
   return { ...toRecitationTask(row), keyPoints: stringList(row.key_points) }
 }
 
 export async function getRecitation(id: string): Promise<RecitationView> {
   await ensureReady()
   const row = get<Row>('SELECT * FROM recitation WHERE id = ?', [id])
-  if (!row) throw new AppError('NOT_FOUND', '复述题不存在')
+  if (!row) throw new AppError('NOT_FOUND', '问答题不存在')
   return toRecitationView(row)
 }
 
@@ -1814,7 +1814,7 @@ export interface RecitationPatch {
 export async function updateRecitation(id: string, patch: RecitationPatch): Promise<RecitationView> {
   await ensureReady()
   const row = get<Row>('SELECT id FROM recitation WHERE id = ?', [id])
-  if (!row) throw new AppError('NOT_FOUND', '复述题不存在')
+  if (!row) throw new AppError('NOT_FOUND', '问答题不存在')
 
   const sets: string[] = []
   const params: (string | number | null)[] = []

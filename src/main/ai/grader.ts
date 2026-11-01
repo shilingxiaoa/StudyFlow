@@ -1,7 +1,7 @@
 /**
- * 费曼复述评分。
+ * 问答环节评分。
  * 关键点：模型只输出各维度 0–1 的达成度，分数一定由主进程按契约权重折算
- * （accuracy 18 / coverage 12 / example 10 / clarity 6，合计 50），避免模型算术飘。
+ * （accuracy 20 / coverage 10 / example 6 / clarity 4，合计 40），避免模型算术飘。
  */
 import { SCORING } from '../../shared/contracts'
 import type { DayDetail, RecitationDimensions, RecitationView } from '../../shared/contracts'
@@ -13,7 +13,7 @@ import { buildGradeSystem, buildGradeUser } from './prompts'
 
 export interface RecitationGrade {
   dimensions: RecitationDimensions
-  /** 0–50，主进程折算 */
+  /** 0–40，主进程折算 */
   score: number
   /** ≤120 字 */
   feedback: string
@@ -26,7 +26,7 @@ function clamp01(value: number): number {
   return Math.min(Math.max(value, 0), 1)
 }
 
-/** 维度达成度 → 50 分制（权重来自 contracts.SCORING，禁止在别处另写一份） */
+/** 维度达成度 → 40 分制（权重来自 contracts.SCORING，禁止在别处另写一份） */
 export function scoreFromDimensions(dimensions: RecitationDimensions): number {
   const weights = SCORING.recitationWeights
   const raw =
@@ -81,7 +81,7 @@ export async function gradeRecitation(
   return {
     dimensions,
     score: scoreFromDimensions(dimensions),
-    feedback: feedback === '' ? '讲解整体成型，继续在这种「讲给外行」的方式上打磨。' : feedback,
+    feedback: feedback === '' ? '回答基本对路，继续按这种「说清因果」的方式答题。' : feedback,
     criticalGap: criticalGap === '' ? '个别要点还没讲透' : criticalGap
   }
 }
@@ -102,13 +102,13 @@ export function buildAdvice(input: AdviceInput): string {
 
   if (input.passed) {
     parts.push(`第 ${input.dayIndex} 天通过（总分 ${input.totalScore}）。`)
-    parts.push(gap ? `复述里的「${gap}」还可以再打磨，明天学新内容前花 2 分钟回顾一下。` : '讲解到位，明天继续按计划推进。')
+    parts.push(gap ? `问答里「${gap}」还可以再补一句，明天学新内容前花 2 分钟回顾一下。` : '问答答得到位，明天继续按计划推进。')
     return parts.join('')
   }
 
   if (input.totalScore >= SCORING.partialLine) {
     parts.push(`第 ${input.dayIndex} 天部分通过（总分 ${input.totalScore}，≥${SCORING.partialLine} 但未到 ${SCORING.passLine}）。`)
-    parts.push(gap ? `先重看「${gap}」，再给一个自己的例子，重考把复述分补上去。` : '把复述再讲一遍、补一个自己的例子，重考即可。')
+    parts.push(gap ? `先重看「${gap}」，下次问到同类问题能直接说清因果，重考把问答分补上去。` : '把这两天的问题再答一遍（说清因果就行），重考即可。')
     return parts.join('')
   }
 
@@ -116,6 +116,6 @@ export function buildAdvice(input: AdviceInput): string {
   if (input.objectiveScore < SCORING.objectiveTotal) {
     parts.push(`客观题丢了 ${SCORING.objectiveTotal - input.objectiveScore} 分，回去核对一下易混点。`)
   }
-  parts.push(gap ? `重点补「${gap}」：先讲清定义，再讲因果，最后举一个自己的例子。` : '回到今天的任务重学一遍，再讲给外行听一次。')
+  parts.push(gap ? `重点补「${gap}」：先弄清定义，再说清因果。` : '回到今天的任务重学一遍，再来答一次。')
   return parts.join('')
 }
