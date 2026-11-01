@@ -82,6 +82,15 @@ async function bootstrap(): Promise<void> {
   // 这样升级后历史计划里的后半段也能直接点进去学 / 直接检测。
   next.exec("UPDATE day SET status = 'learning' WHERE status = 'locked'")
 
+  // 启动自愈：刚启动时不可能有正在进行的 AI 备课，所以残留的 generating
+  // 一定是上次异常退出留下的。改成 failed，前端才能显示「重新备课」，
+  // 否则会永远卡在「正在备课」。
+  next.exec(
+    "UPDATE lesson SET status = 'failed', " +
+      "error = '上次生成中断了（可能中途关了应用或网络中断）。点「重新备课」再试一次。' " +
+      "WHERE status = 'generating'"
+  )
+
   // 兜底自愈：历史版本或异常退出可能留下孤儿子行（级联删除未生效时），启动时清一次
   const pruned = pruneOrphans(next)
   if (pruned > 0) logger.warn('db', `已清理 ${pruned} 条孤儿数据`)

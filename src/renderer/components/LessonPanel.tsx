@@ -627,9 +627,19 @@ export function LessonPanel({ dayId, onGoTasks }: LessonPanelProps): JSX.Element
           </div>
           {!generating && pollExpired ? (
             <div className="sf-lesson__gen-row">
-              <span className="sf-lesson__gen-note">这次等得有点久，可以刷新看看。</span>
+              <span className="sf-lesson__gen-note">
+                这次等得有点久，可能是上一次生成被中断了。可以直接重新备课。
+              </span>
               <Button variant="ghost" size="sm" loading={loading} onClick={() => void load()}>
                 刷新
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                loading={loading}
+                onClick={() => void runGenerate(true)}
+              >
+                重新备课
               </Button>
             </div>
           ) : null}

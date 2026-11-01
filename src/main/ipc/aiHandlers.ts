@@ -90,12 +90,34 @@ export function registerAiHandlers(): void {
   /** 同一天同时点两次「备课」只跑一次 */
   const lessonInflight = new Map<string, Promise<Lesson>>()
 
+  /**
+   * 「生成中」超过这个时间还没有结果，就认为上一次生成被中断了
+   * （关了应用、断网、请求被系统掐掉）。这类残留状态必须能自愈，
+   * 否则界面会一直卡在「正在备课」。
+   */
+  const LESSON_STALE_MS = 3 * 60 * 1000
+
+  function isStaleGenerating(lesson: Lesson, dayId: string): boolean {
+    if (lesson.status !== 'generating') return false
+    if (lessonInflight.has(dayId)) return false
+    const at = lesson.updatedAt ? Date.parse(lesson.updatedAt) : Number.NaN
+    return !Number.isFinite(at) || Date.now() - at > LESSON_STALE_MS
+  }
+
+  const LESSON_STALE_MESSAGE =
+    '上次生成中断了（可能中途关了应用或网络中断）。点「重新备课」再试一次。'
+
   // ───────── 每日教案：读 / 生成 / 答疑 ─────────
   handle<unknown, Lesson>(IPC.LESSON_GET, async (payload) => {
     const dayId = requireId(payload, 'Day id', 'dayId', 'id')
     const day = await repo.getDayDetail(dayId)
     if (!day) throw new AppError('NOT_FOUND', '这一天不存在')
-    return repo.getLesson(dayId)
+    const lesson = await repo.getLesson(dayId)
+    if (isStaleGenerating(lesson, dayId)) {
+      // 把残留的 generating 落成 failed，前端就能显示「重新备课」
+      return repo.setLessonStatus(dayId, 'failed', LESSON_STALE_MESSAGE)
+    }
+    return lesson
   })
 
   handle<unknown, Lesson>(IPC.LESSON_GENERATE, async (payload) => {
