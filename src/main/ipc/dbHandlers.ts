@@ -314,8 +314,9 @@ export function registerDbHandlers(): void {
     const skipped: { name: string; reason: string }[] = []
     let imported = 0
     for (const rawPath of files.slice(0, MAX_FILES)) {
-      // 相对路径按应用根目录解析（自动化测试传的就是相对路径）
-      const filePath = isAbsolute(rawPath) ? rawPath : resolve(app.getAppPath(), rawPath)
+      // 相对路径按进程工作目录解析（自动化测试传的就是相对路径）。
+      // 不能用 app.getAppPath()：打包后它是 resources/app.asar，相对路径会被解析到 asar 内部。
+      const filePath = isAbsolute(rawPath) ? rawPath : resolve(process.cwd(), rawPath)
       try {
         const parsed = await parseDocument(filePath)
         await repo.addMaterial({ goalId, title: parsed.title, kind: parsed.kind, content: parsed.content })

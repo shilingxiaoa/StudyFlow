@@ -3,6 +3,10 @@
   "productName": "StudyFlow",
   "version": "1.4.0",
   "description": "AI 监督式学习进度桌面应用（DeepSeek 驱动）",
+  "author": {
+    "name": "shilingxiaoa",
+    "email": "shilingxiaoa@users.noreply.github.com"
+  },
   "main": "./out/main/index.js",
   "license": "MIT",
   "private": true,
@@ -15,7 +19,49 @@
     "verify": "npm run typecheck && node scripts/schema-lint.mjs",
     "build": "electron-vite build",
     "smoke": "node scripts/schema-lint.mjs && npm run build && node scripts/fixtures.mjs && node scripts/smoke.mjs",
-    "dist": "npm run build && electron-builder --win --dir"
+    "smoke:packaged": "node scripts/smoke.mjs --packaged",
+    "dist": "npm run build && node scripts/dist.mjs",
+    "dist:dir": "npm run build && node scripts/dist.mjs --dir"
+  },
+  "build": {
+    "appId": "com.shilingxiaoa.studyflow",
+    "productName": "StudyFlow",
+    "copyright": "Copyright © 2026 shilingxiaoa",
+    "directories": {
+      "output": "release",
+      "buildResources": "assets"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "StudyFlow",
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "StudyFlow-${version}-setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "StudyFlow-${version}-portable.${ext}"
+    }
   },
   "dependencies": {
     "dayjs": "^1.11.23",
@@ -33,6 +79,7 @@
     "@types/sql.js": "^1.4.11",
     "@vitejs/plugin-react": "^6.1.2",
     "electron": "^44.9.0",
+    "electron-builder": "^26.18.0",
     "electron-vite": "^6.0.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.4"

@@ -38,11 +38,23 @@ npm install
 npm run dev        # 开发模式（主进程 + 渲染进程热更新）
 npm run typecheck  # 主进程 + 渲染进程类型检查
 npm run build      # 产物输出到 out/
-npm run smoke      # 真实 Electron 冒烟（55 项非 AI 链路检查，失败退出码 1）
-npm run dist       # 打包成 Windows 免安装目录（需 electron-builder）
+npm run smoke      # 真实 Electron 冒烟（58 项非 AI 链路检查，失败退出码 1）
+npm run dist       # 打包 Windows 安装版 + 便携版（输出到 release/）
+npm run dist:dir   # 只出免安装目录 release/win-unpacked/
+npm run smoke:packaged  # 对打包后的 exe 再跑一遍冒烟
 ```
 
 > `npm run dev` / `npm run smoke` 都要求 `ELECTRON_RUN_AS_NODE` 未设置；某些终端（或被其他工具注入的环境）会带着它，导致 Electron 退化成 Node，报 `Cannot read properties of undefined (reading 'isPackaged')`。遇到时先 `Remove-Item Env:ELECTRON_RUN_AS_NODE`。
+
+### 打包 Windows 安装包
+
+```bash
+npm run dist     # → release/StudyFlow-<版本>-setup.exe（NSIS 安装版）+ StudyFlow-<版本>-portable.exe（免安装）
+```
+
+- 安装版默认**当前用户安装**（不需要管理员），装到 `%LOCALAPPDATA%\Programs\StudyFlow`，自动建桌面与开始菜单快捷方式；卸载默认**保留数据**（`deleteAppDataOnUninstall: false`）。
+- 安装包目前**没有代码签名**，Windows 首次运行会弹 SmartScreen「未知发布者」，点「更多信息 → 仍要运行」即可；正式对外分发前需要买证书做签名（见 `docs/05-上线路线图.md` T1.5）。
+- 打包依赖的 electron / electron-builder 二进制都走国内镜像（`scripts/dist.mjs` 里已设好环境变量），否则本机直连 GitHub 会超时。
 
 首次启动会进入引导页，要求填写 **DeepSeek API Key**（[platform.deepseek.com](https://platform.deepseek.com) 获取）。Key 只在本机加密保存，没有 Key 时建目标、存计划、勾任务、统计、导出都能正常用，只有 AI 出题/评分会返回 `NO_API_KEY`。
 

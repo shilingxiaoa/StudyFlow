@@ -1,21 +1,31 @@
 import { spawn } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
+import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { rmSync, writeFileSync } from 'node:fs'
 
 /**
  * 自动化冒烟：启动真实 Electron，跑 scripts/smoke-flow.js 里的非 AI 全链路，
  * 打印逐项结果，失败时退出码 1。用法：npm run smoke（会先 build）。
  * 可选参数：node scripts/smoke.mjs <流程脚本> <截图目录>
+ * 打包产物校验：node scripts/smoke.mjs --packaged（跑 release/win-unpacked/StudyFlow.exe，无需源码目录）
  */
 const require = createRequire(import.meta.url)
 const here = dirname(fileURLToPath(import.meta.url))
 const root = join(here, '..')
+const packaged = process.argv.includes('--packaged')
 const electron = require('electron')
 
-const flowScript = process.argv[2] ?? join(here, 'smoke-flow.js')
-const shotsDir = process.argv[3]
+const positional = process.argv.slice(2).filter((item) => !item.startsWith('--'))
+const flowScript = positional[0] ?? join(here, 'smoke-flow.js')
+const shotsDir = positional[1]
+
+// 打包版直接跑 exe，不传项目目录（asar 里已经包含全部代码）
+// SF_SMOKE_EXE=<路径> 可以指定任意产物（例如 release/StudyFlow-1.4.0-portable.exe）
+const customExe = process.env.SF_SMOKE_EXE
+const customPath = customExe ? (isAbsolute(customExe) ? customExe : resolve(root, customExe)) : undefined
+const exe = customPath ?? (packaged ? join(root, 'release', 'win-unpacked', 'StudyFlow.exe') : electron)
+const exeArgs = customPath || packaged ? [] : ['.']
 
 const env = { ...process.env, SF_SMOKE: '1', SF_SMOKE_SCRIPT: flowScript }
 if (shotsDir) env.SF_SHOTS = join(root, shotsDir)
@@ -32,7 +42,7 @@ env.SF_USER_DATA = smokeData
 delete env.ELECTRON_RUN_AS_NODE
 delete env.SF_SMOKE_RESULT
 
-const child = spawn(electron, ['.'], { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] })
+const child = spawn(exe, exeArgs, { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] })
 
 let stdout = ''
 let stderr = ''
