@@ -78,6 +78,10 @@ async function bootstrap(): Promise<void> {
   next.exec('PRAGMA foreign_keys = ON;')
   next.exec(SCHEMA_SQL)
 
+  // v1.3 取消「解锁」机制：老库里被标成 locked 的 Day 一律改成可学习，
+  // 这样升级后历史计划里的后半段也能直接点进去学 / 直接检测。
+  next.exec("UPDATE day SET status = 'learning' WHERE status = 'locked'")
+
   // 兜底自愈：历史版本或异常退出可能留下孤儿子行（级联删除未生效时），启动时清一次
   const pruned = pruneOrphans(next)
   if (pruned > 0) logger.warn('db', `已清理 ${pruned} 条孤儿数据`)

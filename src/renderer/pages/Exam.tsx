@@ -428,7 +428,7 @@ export default function ExamPage({ examId }: ExamProps): JSX.Element {
               </Badge>
               <p className="exam-result__hint">
                 {level.label === '通过'
-                  ? `${SCORING.passLine} 分及以上算通过，这一天已经解锁。`
+                  ? `${SCORING.passLine} 分及以上算通过，这一天已计入进度。`
                   : level.label === '部分通过'
                     ? `${SCORING.partialLine}–${SCORING.passLine - 1} 分算部分通过，可以重考刷新成绩。`
                     : `低于 ${SCORING.partialLine} 分，建议回看这一天的任务，再考一次。`}

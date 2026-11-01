@@ -33,8 +33,8 @@ const REASON_LABEL: Record<ProgressEvent['reason'], string> = {
   manual: '手动调整'
 }
 
-/** 图例顺序：已通过 → 部分通过 → 待检测 → 学习中 → 未解锁 */
-const LEGEND: DayStatus[] = ['passed', 'partial', 'exam_ready', 'learning', 'locked']
+/** 图例顺序：已通过 → 部分通过 → 待检测 → 学习中（v1.3 起没有「未解锁」） */
+const LEGEND: DayStatus[] = ['passed', 'partial', 'exam_ready', 'learning']
 
 function deltaText(delta: number): string {
   if (!Number.isFinite(delta) || delta === 0) return '±0%'
@@ -355,7 +355,7 @@ export default function Dashboard(): JSX.Element {
           <div className="dash-cta__row">
             <div className="dash-cta__main">
               <p className="dash-cta__title">暂时没有可学习的 Day</p>
-              <p className="dash-cta__hint">计划里的 Day 都在等待解锁，刷新一下或去复盘统计看看。</p>
+              <p className="dash-cta__hint">任何一天都可以直接开始：点进度条里的格子就能进去学或检测。</p>
             </div>
             <Button variant="ghost" onClick={() => navigate('/stats')}>
               复盘统计

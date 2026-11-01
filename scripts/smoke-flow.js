@@ -119,6 +119,14 @@
       }
     })
 
+    const allDays = await must('day:list（建计划后）', 'day:list', { goalId })
+    record(
+      '新计划的所有 Day 都是「学习中」，没有 locked',
+      allDays.length === 3 && allDays.every((item) => item.status === 'learning'),
+      { statuses: allDays.map((item) => item.status) }
+    )
+    const lastDayId = allDays[allDays.length - 1] && allDays[allDays.length - 1].id
+
     // 3. 首屏状态
     let boot2 = await must('bootstrap/建计划后', 'app:bootstrap')
     record('bootstrap 数据完整', Boolean(boot2.activePlan && boot2.todayDay && boot2.progress), {
@@ -154,6 +162,14 @@
 
     // 5. 未配置 Key 时出题必须被拦住
     await expectError('exam:create 无 Key → NO_API_KEY', 'exam:create', { dayId }, 'NO_API_KEY')
+    // 5.1 跳着做：最后一天既没解锁也没勾任务，一样能直接发起检测
+    //（先撞到 Key 检查，说明「必须按顺序 / 必须勾完任务」的守卫已经移除）
+    await expectError(
+      '跳着做：任意 Day 直接检测不再被顺序拦（无 Key → NO_API_KEY）',
+      'exam:create',
+      { dayId: lastDayId },
+      'NO_API_KEY'
+    )
 
     // 6. 进度与统计
     const summary = await must('progress:summary', 'progress:summary', { goalId })

@@ -183,11 +183,7 @@ export function registerAiHandlers(): void {
     const dayId = requireId(payload, 'Day id', 'dayId', 'id')
     const day = await repo.getDayDetail(dayId)
     if (!day) throw new AppError('NOT_FOUND', '这一天不存在')
-    // 守卫：Day 的任务必须全部完成（learning = 还有没做的任务；locked = 还没解锁）
-    if (day.status === 'locked') throw new AppError('VALIDATION', '这一天还没解锁，先完成前面的 Day')
-    if (day.status === 'learning') {
-      throw new AppError('VALIDATION', '这一天的任务还没全部完成，先做完任务再发起检测')
-    }
+    // v1.3 起不限制顺序：任意 Day 都能直接检测，不需要做完前面的 Day、也不要求先勾完任务
 
     const materials = await repo.listMaterials(day.goalId)
     const draft = await generateExam(day, materialExcerpt(materials))

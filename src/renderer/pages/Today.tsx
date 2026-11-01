@@ -324,7 +324,7 @@ export default function Today({ dayId }: TodayProps): JSX.Element {
             {creating ? (
             <span className="today-bar__stage">
               <Spinner size={12} /> 正在出题…
-              <span className="today-bar__hint">按今天的材料生成客观题和复述题，通常 10–30 秒。</span>
+              <span className="today-bar__hint">按今天的材料生成客观题和问答，通常 10–30 秒。</span>
             </span>
           ) : allDone ? (
             <span className="today-bar__ok">
@@ -336,7 +336,7 @@ export default function Today({ dayId }: TodayProps): JSX.Element {
           ) : (
             <span>
               还有 {remaining} 个任务
-              <span className="today-bar__hint">勾完就能开始检测。</span>
+              <span className="today-bar__hint">也可以直接检测，不勾任务也行。</span>
             </span>
           )}
         </div>
@@ -360,12 +360,21 @@ export default function Today({ dayId }: TodayProps): JSX.Element {
                   查看上次结果
                 </Button>
               ) : null}
-              <Button onClick={() => void startExam()} loading={creating} disabled={!allDone}>
+              <Button onClick={() => void startExam()} loading={creating}>
                 重新检测
               </Button>
             </>
           ) : !allDone ? (
-            <Button disabled>还有 {remaining} 个任务</Button>
+            <>
+              {day.examId ? (
+                <Button variant="ghost" onClick={() => navigate(`/exam/${day.examId ?? ''}`)}>
+                  继续上次检测
+                </Button>
+              ) : null}
+              <Button variant="ghost" onClick={() => void startExam()} loading={creating}>
+                直接检测
+              </Button>
+            </>
           ) : day.examId ? (
             <Button onClick={() => navigate(`/exam/${day.examId ?? ''}`)}>继续上次检测</Button>
           ) : (

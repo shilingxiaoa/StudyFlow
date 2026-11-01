@@ -311,9 +311,9 @@ function toMaterialKind(value: unknown): MaterialKind {
 }
 
 function toDayStatus(value: unknown): DayStatus {
-  const text = s(value, 'locked')
+  const text = s(value, 'learning')
   const allowed: readonly DayStatus[] = ['locked', 'learning', 'exam_ready', 'passed', 'partial', 'failed']
-  return (allowed as readonly string[]).includes(text) ? (text as DayStatus) : 'locked'
+  return (allowed as readonly string[]).includes(text) ? (text as DayStatus) : 'learning'
 }
 
 function toQuestionType(value: unknown): QuestionType {
@@ -869,7 +869,7 @@ export async function savePlan(goalId: string, generated: GeneratedPlan): Promis
           day.title,
           day.goal,
           day.estMinutes,
-          index === 0 ? 'learning' : 'locked',
+          'learning',
           JSON.stringify(day.checkpoints),
           at
         ]
@@ -1724,17 +1724,6 @@ export async function finishExam(
       totalScore,
       exam.dayId
     ])
-
-    // 通过 / 部分通过后解锁下一天
-    if (status === 'passed' || status === 'partial') {
-      const next = get<Row>(
-        'SELECT * FROM day WHERE plan_id = ? AND idx > ? ORDER BY idx ASC LIMIT 1',
-        [planId, dayIdx]
-      )
-      if (next && toDayStatus(next.status) === 'locked') {
-        run(`UPDATE day SET status = 'learning' WHERE id = ?`, [s(next.id)])
-      }
-    }
 
     const after = percentOfGoal(goalId)
     const delta = round1(after - before)

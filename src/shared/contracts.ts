@@ -517,7 +517,7 @@ export const SCORING = {
 } as const;
 
 export const DAY_STATUS_LABEL: Record<DayStatus, string> = {
-  locked: '未解锁',
+  locked: '可学习',
   learning: '学习中',
   exam_ready: '待检测',
   passed: '已通过',
