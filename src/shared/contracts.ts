@@ -400,10 +400,20 @@ export interface StatsOverview {
 export interface BootstrapData {
   settings: AppSettings;
   goals: Goal[];
+  /** 当前正在看的目标 id；没有目标时为 null */
+  activeGoalId: string | null;
+  /** 当前目标下的全部计划（新的在前），第一份通常是 active */
+  plans: PlanSummary[];
   activePlan: PlanSummary | null;
   progress: ProgressSummary | null;
   todayDay: DayWithTasks | null;
   stats: StatsOverview;
+}
+
+/** context:set 的入参：切目标 / 切计划；传 null 表示清空，缺省表示不变 */
+export interface ContextInput {
+  goalId?: string | null;
+  planId?: string | null;
 }
 
 // ───────────────────────────── IPC 通道表 ─────────────────────────────
@@ -425,6 +435,9 @@ export const IPC = {
   PLAN_SAVE: 'plan:save',
   PLAN_LIST: 'plan:list',
   PLAN_DELETE: 'plan:delete',
+
+  /** 切换「当前目标 / 当前计划」，返回新的 BootstrapData */
+  CONTEXT_SET: 'context:set',
 
   DAY_LIST: 'day:list',
   DAY_GET: 'day:get',

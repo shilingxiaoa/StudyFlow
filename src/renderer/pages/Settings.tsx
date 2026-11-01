@@ -17,7 +17,7 @@ import {
   useToast
 } from '../components/ui'
 import { call, errorMessage } from '../lib/api'
-import { formatMinutes } from '../lib/format'
+import { formatMinutes, formatPercent } from '../lib/format'
 import { navigate } from '../lib/router'
 import { useAppStore } from '../store/app'
 import './Settings.css'
@@ -70,8 +70,12 @@ export default function Settings(): JSX.Element {
   const { success, danger, warn } = useToast()
 
   const settings = boot?.settings ?? null
-  const goal = boot?.goals[0] ?? null
+  const goals = boot?.goals ?? []
+  const activeGoalId = boot?.activeGoalId ?? null
+  const plans = boot?.plans ?? []
+  const goal = activeGoalId ? goals.find((item) => item.id === activeGoalId) ?? null : null
   const activePlan = boot?.activePlan ?? null
+  const setContext = useAppStore((state) => state.setContext)
 
   // ---- API ----
   const [keyDraft, setKeyDraft] = useState('')
@@ -214,7 +218,8 @@ export default function Settings(): JSX.Element {
       setConfirm(null)
       await refresh()
       success('学习目标已删除')
-      navigate('/setup')
+      // 还有别的目标就留在看板，一个都不剩时 App 会自动跳回引导页
+      navigate('/')
     } catch (err) {
       danger(errorMessage(err))
     } finally {
@@ -423,6 +428,51 @@ export default function Settings(): JSX.Element {
             保存提醒设置
           </Button>
         </div>
+      </Card>
+
+      {/* ---------- 学习目标与计划 ---------- */}
+      <Card
+        title="学习目标与计划"
+        subtitle="可以同时有多个目标，每个目标下也可以有多份计划，切换随时生效。"
+        actions={
+          <Button size="sm" variant="ghost" onClick={() => navigate('/setup')}>
+            新建目标
+          </Button>
+        }
+      >
+        {goals.length === 0 ? (
+          <p className="sf-muted">还没有学习目标，先到引导页创建一个。</p>
+        ) : (
+          <ul className="sf-settings__goals">
+            {goals.map((item) => {
+              const current = item.id === activeGoalId
+              return (
+                <li key={item.id} className={current ? 'sf-settings__goal is-current' : 'sf-settings__goal'}>
+                  <div className="sf-settings__goal-main">
+                    <span className="sf-settings__row-title">{item.title}</span>
+                    <span className="sf-settings__row-desc">
+                      进度 {formatPercent(item.progress)} · 每天 {formatMinutes(item.dailyMinutes)}
+                      {current && plans.length > 0 ? ` · 当前目标下 ${plans.length} 份计划` : ''}
+                    </span>
+                  </div>
+                  {current ? (
+                    <Badge tone="accent" dot>
+                      当前
+                    </Badge>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => void setContext({ goalId: item.id })}
+                    >
+                      切换
+                    </Button>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        )}
       </Card>
 
       {/* ---------- 数据管理 ---------- */}

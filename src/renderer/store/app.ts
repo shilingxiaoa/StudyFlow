@@ -19,6 +19,8 @@ export interface AppState {
   error: string | null
   load: () => Promise<void>
   refresh: () => Promise<void>
+  /** 切换当前目标 / 当前计划（主进程会持久化选择，并把整份 bootstrap 送回来） */
+  setContext: (input: { goalId?: string | null; planId?: string | null }) => Promise<void>
   toast: (msg: string, tone?: 'info' | 'success' | 'warn' | 'danger') => void
 }
 
@@ -73,6 +75,16 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
   toast(msg, tone = 'info') {
     pushToast(msg, tone)
+  },
+
+  async setContext(input) {
+    try {
+      const boot = await call<BootstrapData>(IPC.CONTEXT_SET, input)
+      applyTheme(boot.settings.theme)
+      set({ boot, loading: false, error: null })
+    } catch (err) {
+      pushToast(errorMessage(err), 'warn')
+    }
   }
 }))
 
@@ -107,6 +119,13 @@ export function bindPushListeners(): void {
 // ── 常用选择器（页面直接 useAppStore(selectXxx) 即可） ──
 export const selectBoot = (state: AppState): BootstrapData | null => state.boot
 export const selectGoals = (state: AppState): BootstrapData['goals'] => state.boot?.goals ?? []
+export const selectActiveGoalId = (state: AppState): string | null => state.boot?.activeGoalId ?? null
+export const selectPlans = (state: AppState): BootstrapData['plans'] => state.boot?.plans ?? []
+export const selectActiveGoal = (state: AppState): BootstrapData['goals'][number] | null => {
+  const boot = state.boot
+  if (!boot || boot.activeGoalId === null) return null
+  return boot.goals.find((goal) => goal.id === boot.activeGoalId) ?? null
+}
 export const selectSettings = (state: AppState): BootstrapData['settings'] | null => state.boot?.settings ?? null
 export const selectActivePlan = (state: AppState): BootstrapData['activePlan'] => state.boot?.activePlan ?? null
 export const selectTodayDay = (state: AppState): BootstrapData['todayDay'] => state.boot?.todayDay ?? null

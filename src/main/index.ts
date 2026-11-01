@@ -30,7 +30,9 @@ function createWindow(): void {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
-      spellcheck: false
+      spellcheck: false,
+      // 冒烟要截图：禁止后台节流，否则窗口被遮挡时合成器不出帧，capturePage 会拿到旧画面
+      backgroundThrottling: false
     }
   })
 
@@ -44,6 +46,13 @@ function createWindow(): void {
   // 冒烟自检：SF_SMOKE=1 时窗口加载完读一次 DOM，打印后退出（供 CI / 本地验收）
   if (process.env['SF_SMOKE'] === '1') {
     const shotsDir = process.env['SF_SHOTS']
+    // 截图依赖真实合成帧：把窗口顶到最前，避免被其它窗口遮挡后不再出帧
+    if (shotsDir) {
+      win.setAlwaysOnTop(true, 'screen-saver')
+      win.show()
+      win.focus()
+      win.moveTop()
+    }
     win.webContents.on('console-message', (_event, level, message, line, sourceId) => {
       console.log(`[smoke:console:${level}] ${message} (${sourceId}:${line})`)
       // 可选：渲染层打 `[shot] <label>` 就截一张图，命名确定，方便文档配图（SF_SHOTS=<目录>）
@@ -52,8 +61,9 @@ function createWindow(): void {
       if (shotsDir && message.startsWith('[shot] ')) {
         const label = message.slice(7).trim().replace(/[^\w.-]+/g, '-') || 'shot'
         mkdirSync(shotsDir, { recursive: true })
-        win.webContents.invalidate()
         setTimeout(() => {
+          // 等一屏再截：console.log 到合成器出帧之间常有一屏延迟，否则会拍上一个页面。
+          // 这里刻意不用 requestAnimationFrame（窗口被遮挡时 rAF 会被节流甚至不触发）。
           void win.webContents
             .capturePage()
             .then((image) => {
@@ -61,7 +71,7 @@ function createWindow(): void {
               console.log(`[smoke] 已截图 ${label}`)
             })
             .catch((error) => console.error('[smoke] 截图失败', error))
-        }, 260)
+        }, 1500)
       }
     })
     win.webContents.on('did-fail-load', (_event, code, desc) => {

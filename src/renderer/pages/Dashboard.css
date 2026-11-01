@@ -3,6 +3,46 @@
    进度环与分段条是视觉主角，其余信息退到第二层。
    ============================================================ */
 
+/* ---------- 目标 / 计划切换 ---------- */
+.dash-switch {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+  padding: var(--s-3) var(--s-4);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+}
+
+.dash-switch__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 220px;
+  flex: 1 1 240px;
+}
+
+.dash-switch__label {
+  font-size: var(--fs-2xs);
+  color: var(--c-text-3);
+  letter-spacing: 0.04em;
+}
+
+.dash-switch__actions {
+  display: flex;
+  gap: var(--s-2);
+  margin-left: auto;
+}
+
+@media (max-width: 720px) {
+  .dash-switch__actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
 /* ---------- 顶部大区 ---------- */
 .dash-hero__inner {
   display: flex;

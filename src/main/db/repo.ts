@@ -12,6 +12,7 @@ import { API_BASE, MODEL_ID, PUSH, SCORING } from '../../shared/contracts'
 import type {
   AppSettings,
   BootstrapData,
+  ContextInput,
   DayDetail,
   DayStatus,
   DayWithTasks,
@@ -144,6 +145,29 @@ function readConfigJson(key: string): unknown {
 
 function writeConfigJson(key: string, value: unknown): void {
   writeConfig(key, JSON.stringify(value))
+}
+
+// ───────────────────────────── 当前选中的目标 / 计划 ─────────────────────────────
+// 支持多目标、多计划：选择存在 app_config 里，重启后还停在同一个目标上。
+
+const ACTIVE_GOAL_KEY = 'active_goal_id'
+const ACTIVE_PLAN_KEY = 'active_plan_id'
+
+function readActiveGoalId(): string | null {
+  const value = (readConfig(ACTIVE_GOAL_KEY) ?? '').trim()
+  return value === '' ? null : value
+}
+
+function readActivePlanId(): string | null {
+  const value = (readConfig(ACTIVE_PLAN_KEY) ?? '').trim()
+  return value === '' ? null : value
+}
+
+function writeActiveContext(goalId: string | null, planId: string | null): void {
+  if (goalId === null || goalId === '') deleteConfig(ACTIVE_GOAL_KEY)
+  else writeConfig(ACTIVE_GOAL_KEY, goalId)
+  if (planId === null || planId === '') deleteConfig(ACTIVE_PLAN_KEY)
+  else writeConfig(ACTIVE_PLAN_KEY, planId)
 }
 
 // ───────────────────────────── 设置 / API Key ─────────────────────────────
@@ -503,11 +527,25 @@ function currentPlanRow(goalId: string): Row | null {
   )
 }
 
-/** 该目标当前计划下的全部 day 行（按 idx 升序） */
+/** 用户当前选中的计划：配置里那份只要还属于该目标就用它，否则回退到有效计划 */
+function selectedPlanRow(goalId: string): Row | null {
+  const savedId = readActivePlanId()
+  if (savedId !== null) {
+    const row = get<Row>('SELECT * FROM plan WHERE id = ? AND goal_id = ?', [savedId, goalId])
+    if (row) return row
+  }
+  return currentPlanRow(goalId)
+}
+
+function planDayRows(planId: string): Row[] {
+  return all<Row>('SELECT * FROM day WHERE plan_id = ? ORDER BY idx ASC', [planId])
+}
+
+/** 该目标当前选中计划下的全部 day 行（按 idx 升序） */
 function goalDayRows(goalId: string): Row[] {
-  const plan = currentPlanRow(goalId)
+  const plan = selectedPlanRow(goalId)
   if (!plan) return []
-  return all<Row>('SELECT * FROM day WHERE plan_id = ? ORDER BY idx ASC', [s(plan.id)])
+  return planDayRows(s(plan.id))
 }
 
 /**
@@ -662,6 +700,9 @@ export async function createGoal(input: GoalInput): Promise<Goal> {
     ]
   )
   persist()
+  // 新建目标后直接切过去，用户下一步就是给它生成计划
+  writeActiveContext(id, null)
+  persist()
   broadcast(PUSH.PROGRESS_CHANGED, { goalId: id, percent: 0 })
   const created = await getGoal(id)
   if (!created) throw new AppError('DB', '创建学习目标失败')
@@ -744,6 +785,8 @@ export async function deleteGoal(id: string): Promise<void> {
     run('DELETE FROM lesson WHERE day_id NOT IN (SELECT id FROM day)')
     run('DELETE FROM question WHERE exam_id NOT IN (SELECT id FROM exam)')
     run('DELETE FROM recitation WHERE exam_id NOT IN (SELECT id FROM exam)')
+    // 删掉的若是当前目标，把选择清掉，下次自动挑一个存在的
+    if (readActiveGoalId() === id) writeActiveContext(null, null)
   })
   persist()
   broadcast(PUSH.PROGRESS_CHANGED, { goalId: id, percent: 0 })
@@ -842,6 +885,8 @@ export async function savePlan(goalId: string, generated: GeneratedPlan): Promis
     return id
   })
 
+  // 新计划保存后自动切到它（多计划场景下用户期望「刚建的就是当前的」）
+  writeActiveContext(goalId, planId)
   persist()
   pushProgress(goalId)
   const row = get<Row>('SELECT * FROM plan WHERE id = ?', [planId])
@@ -876,6 +921,8 @@ export async function deletePlan(id: string): Promise<void> {
     run('DELETE FROM exam WHERE day_id NOT IN (SELECT id FROM day)')
     run('DELETE FROM question WHERE exam_id NOT IN (SELECT id FROM exam)')
     run('DELETE FROM recitation WHERE exam_id NOT IN (SELECT id FROM exam)')
+    // 删掉的若是当前计划，清掉选择，回退到该目标剩下的有效计划
+    if (readActivePlanId() === id) deleteConfig(ACTIVE_PLAN_KEY)
   })
   persist()
   pushProgress(goalId)
@@ -988,12 +1035,15 @@ export async function setTaskNote(taskId: string, note: string | null): Promise<
 
 // ───────────────────────────── 进度视图 ─────────────────────────────
 
-export async function getProgressSummary(goalId: string): Promise<ProgressSummary> {
+export async function getProgressSummary(
+  goalId: string,
+  planId?: string | null
+): Promise<ProgressSummary> {
   await ensureReady()
   const goalRow = get<Row>('SELECT id, daily_minutes FROM goal WHERE id = ?', [goalId])
   if (!goalRow) throw new AppError('NOT_FOUND', '学习目标不存在')
 
-  const days = goalDayRows(goalId)
+  const days = planId != null && planId !== '' ? planDayRows(planId) : goalDayRows(goalId)
   const percent = percentFromRows(days)
   const since = iso(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
   const weekMinutes = n(
@@ -1144,6 +1194,16 @@ export async function getStatsOverview(): Promise<StatsOverview> {
   }
 }
 
+/** 当前应该打开的目标：配置里选过的优先，否则取第一个有 active 计划的目标 */
+function resolveActiveGoalRow(goalRows: readonly Row[]): Row | null {
+  const savedId = readActiveGoalId()
+  if (savedId !== null) {
+    const hit = goalRows.find((row) => s(row.id) === savedId)
+    if (hit) return hit
+  }
+  return pickActiveGoalRow(goalRows)
+}
+
 /** 当前应该打开的 plan：优先有 active 计划的最近目标 */
 function pickActiveGoalRow(goalRows: readonly Row[]): Row | null {
   for (const row of goalRows) {
@@ -1154,10 +1214,7 @@ function pickActiveGoalRow(goalRows: readonly Row[]): Row | null {
   return goalRows.length > 0 ? goalRows[0] : null
 }
 
-function pickTodayDay(goalId: string): DayWithTasks | null {
-  const plan = currentPlanRow(goalId)
-  if (!plan) return null
-  const planId = s(plan.id)
+function pickTodayDayOfPlan(planId: string): DayWithTasks | null {
   const candidates = all<Row>(
     `SELECT * FROM day
       WHERE plan_id = ? AND status IN ('exam_ready', 'learning')
@@ -1170,43 +1227,108 @@ function pickTodayDay(goalId: string): DayWithTasks | null {
   return toDay(row, tasksOfDay(s(row.id)))
 }
 
+function pickTodayDay(goalId: string): DayWithTasks | null {
+  const plan = selectedPlanRow(goalId)
+  if (!plan) return null
+  return pickTodayDayOfPlan(s(plan.id))
+}
+
+function planSummaryOf(planId: string): PlanSummary | null {
+  const row = get<Row>(
+    `SELECT p.*, g.title AS goal_title,
+            (SELECT COUNT(*) FROM day d WHERE d.plan_id = p.id AND d.status = 'passed') AS passed_days
+       FROM plan p JOIN goal g ON g.id = p.goal_id
+      WHERE p.id = ?`,
+    [planId]
+  )
+  return row ? toPlanSummary(row) : null
+}
+
 export async function getBootstrap(): Promise<BootstrapData> {
   await ensureReady()
   const settings = readSettings()
   const goalRows = all<Row>('SELECT * FROM goal WHERE archived = 0 ORDER BY created_at DESC')
   const goals = goalRows.map((row) => toGoal(row, percentOfGoal(s(row.id))))
 
-  const currentGoal = pickActiveGoalRow(goalRows)
+  const activeGoal = resolveActiveGoalRow(goalRows)
+  const activeGoalId = activeGoal ? s(activeGoal.id) : null
+
+  let plans: PlanSummary[] = []
   let activePlan: PlanSummary | null = null
   let progress: ProgressSummary | null = null
   let todayDay: DayWithTasks | null = null
 
-  if (currentGoal) {
-    const goalId = s(currentGoal.id)
-    const plan = currentPlanRow(goalId)
+  if (activeGoalId !== null) {
+    plans = await listPlans(activeGoalId)
+    const plan = selectedPlanRow(activeGoalId)
     if (plan) {
       const planId = s(plan.id)
-      const summaryRow = get<Row>(
-        `SELECT p.*, g.title AS goal_title,
-                (SELECT COUNT(*) FROM day d WHERE d.plan_id = p.id AND d.status = 'passed') AS passed_days
-           FROM plan p JOIN goal g ON g.id = p.goal_id
-          WHERE p.id = ?`,
-        [planId]
-      )
-      activePlan = summaryRow ? toPlanSummary(summaryRow) : null
+      activePlan = planSummaryOf(planId)
+      progress = await getProgressSummary(activeGoalId, planId)
+      todayDay = pickTodayDayOfPlan(planId)
     }
-    progress = await getProgressSummary(goalId)
-    todayDay = pickTodayDay(goalId)
   }
 
   return {
     settings,
     goals,
+    activeGoalId,
+    plans,
     activePlan,
     progress,
     todayDay,
     stats: await getStatsOverview()
   }
+}
+
+/**
+ * 切换「当前目标 / 当前计划」，返回切换后的 bootstrap。
+ * · 只给 goalId：切目标，计划自动落到该目标的有效计划
+ * · 只给 planId：切计划，目标跟着计划走
+ * · goalId: null：清空选择（回到自动挑选）
+ */
+export async function setActiveContext(input: ContextInput): Promise<BootstrapData> {
+  await ensureReady()
+  const patch = input ?? {}
+  let goalId: string | null | undefined =
+    patch.goalId === undefined ? undefined : patch.goalId === null ? null : String(patch.goalId).trim()
+  let planId: string | null | undefined =
+    patch.planId === undefined ? undefined : patch.planId === null ? null : String(patch.planId).trim()
+
+  if (goalId === '') goalId = null
+  if (planId === '') planId = null
+
+  // 给了 planId：先按计划反查目标，顺带校验归属
+  if (planId !== undefined && planId !== null) {
+    const planRow = get<Row>('SELECT goal_id FROM plan WHERE id = ?', [planId])
+    if (!planRow) throw new AppError('NOT_FOUND', '计划不存在')
+    const planGoalId = s(planRow.goal_id)
+    if (goalId !== undefined && goalId !== null && goalId !== planGoalId) {
+      throw new AppError('VALIDATION', '这份计划不属于该目标')
+    }
+    goalId = planGoalId
+  }
+
+  if (goalId !== undefined && goalId !== null) {
+    const goalRow = get<Row>('SELECT id FROM goal WHERE id = ? AND archived = 0', [goalId])
+    if (!goalRow) throw new AppError('NOT_FOUND', '学习目标不存在')
+  }
+
+  transaction(() => {
+    if (goalId === null) {
+      writeActiveContext(null, null)
+      return
+    }
+    if (goalId !== undefined) {
+      // 换目标时把计划选择清掉，交给 selectedPlanRow 落到有效计划
+      writeActiveContext(goalId, planId ?? null)
+      return
+    }
+    if (planId !== undefined && planId !== null) writeConfig(ACTIVE_PLAN_KEY, planId)
+  })
+
+  persist()
+  return getBootstrap()
 }
 
 // ───────────────────────────── 资料 ─────────────────────────────

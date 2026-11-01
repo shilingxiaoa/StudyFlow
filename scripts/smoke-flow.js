@@ -193,7 +193,7 @@
     screens.push(snapshot('dashboard'))
 
     location.hash = `#/day/${dayId}`
-    await sleep(900)
+    await sleep(1800)
     screens.push(snapshot('day'))
     record(
       '已完成任务不再显示「进行中」',
@@ -227,6 +227,84 @@
     location.hash = '#/plan/new'
     await sleep(900)
     screens.push(snapshot('plan-new'))
+
+    // 10.5 多目标 / 多计划：新建目标不会抢走旧目标的数据，切换靠 context:set
+    const goal2 = await must('goal:create/第二个', 'goal:create', {
+      title: '冒烟：英语口语',
+      description: '验证多目标与多计划。',
+      kind: 'skill',
+      level: 'zero',
+      dailyMinutes: 30,
+      targetDate: null
+    })
+    let boot4 = await must('bootstrap/建第二个目标后', 'app:bootstrap')
+    record(
+      '新建目标后自动切到新目标',
+      boot4.activeGoalId === goal2.id && boot4.goals.length === 2 && boot4.activePlan === null,
+      { activeGoalId: boot4.activeGoalId, goals: boot4.goals.length }
+    )
+
+    const plan2 = await must('plan:save/第二个目标', 'plan:save', {
+      goalId: goal2.id,
+      plan: {
+        title: '英语口语 · 2 天',
+        summary: '多目标冒烟',
+        totalDays: 2,
+        days: [1, 2].map((index) => ({
+          index,
+          title: `第 ${index} 天：跟读练习 ${index}`,
+          goal: `完成第 ${index} 组跟读`,
+          estMinutes: 30,
+          checkpoints: [`能跟读第 ${index} 段`],
+          tasks: [{ title: `跟读第 ${index} 段`, kind: 'practice', estMinutes: 30 }]
+        }))
+      }
+    })
+    boot4 = await must('bootstrap/两个目标各有计划', 'app:bootstrap')
+    record(
+      '计划只属于它的目标',
+      boot4.activeGoalId === goal2.id &&
+        boot4.activePlan !== null &&
+        boot4.activePlan.goalId === goal2.id &&
+        boot4.plans.length === 1,
+      { activeGoalId: boot4.activeGoalId, plans: boot4.plans.length }
+    )
+
+    // 切回第一个目标：计划、进度、今日 Day 都要跟着换
+    let switched = await must('context:set 切回目标一', 'context:set', { goalId })
+    record(
+      '切换目标后计划与进度同步',
+      switched.activeGoalId === goalId &&
+        switched.activePlan !== null &&
+        switched.activePlan.goalId === goalId &&
+        switched.progress.percent === 0 &&
+        switched.todayDay !== null,
+      {
+        activeGoalId: switched.activeGoalId,
+        planGoalId: switched.activePlan && switched.activePlan.goalId,
+        percent: switched.progress.percent
+      }
+    )
+
+    // 直接指定计划：跨目标时会顺带切目标
+    switched = await must('context:set 指定第二份计划', 'context:set', { planId: plan2.id })
+    record(
+      '指定计划会带上所属目标',
+      switched.activeGoalId === goal2.id && switched.activePlan.id === plan2.id,
+      { activeGoalId: switched.activeGoalId, planId: switched.activePlan && switched.activePlan.id }
+    )
+
+    // 删除第二个目标：上下文要回退到第一个目标，而不是悬空
+    await must('goal:delete/第二个目标', 'goal:delete', { goalId: goal2.id })
+    switched = await must('bootstrap/删目标后回退', 'app:bootstrap')
+    record(
+      '删除当前目标后回退到剩余目标',
+      switched.goals.length === 1 &&
+        switched.activeGoalId === goalId &&
+        switched.activePlan !== null &&
+        switched.activePlan.goalId === goalId,
+      { goals: switched.goals.length, activeGoalId: switched.activeGoalId }
+    )
 
     // 11. 清场
     await must('goal:delete', 'goal:delete', { goalId })

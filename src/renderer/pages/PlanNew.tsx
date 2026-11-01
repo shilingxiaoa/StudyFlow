@@ -58,8 +58,10 @@ export default function PlanNew(): JSX.Element {
   const refresh = useAppStore((state) => state.refresh)
   const { success, warn, toast } = useToast()
 
-  const goal = boot?.goals[0] ?? null
+  const activeGoalId = boot?.activeGoalId ?? null
+  const goal = boot?.goals.find((item) => item.id === activeGoalId) ?? null
   const goalId = goal?.id ?? ''
+  const planCount = boot?.plans.length ?? 0
 
   const [phase, setPhase] = useState<Phase>('idle')
   const [generated, setGenerated] = useState<GeneratedPlan | null>(null)
@@ -365,6 +367,11 @@ export default function PlanNew(): JSX.Element {
               <li>覆盖约 30 天，每天 3–5 个任务，按难度由浅入深排期</li>
               <li>生成通常需要 30–60 秒，期间不会写入本地数据</li>
               <li>生成后可以逐天检查、删掉不需要的 Day，再保存</li>
+              {planCount > 0 ? (
+                <li>
+                  这个目标已有 {planCount} 份计划：保存新计划后旧计划会归档，历史数据与统计都会保留
+                </li>
+              ) : null}
             </ul>
             {error !== null ? (
               <ErrorState error={error} onRetry={() => void generatePlan()} retryText="重新生成" />

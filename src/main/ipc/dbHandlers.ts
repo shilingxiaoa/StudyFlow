@@ -161,6 +161,21 @@ export function registerDbHandlers(): void {
     return { id }
   })
 
+  handle<unknown, Awaited<ReturnType<typeof repo.setActiveContext>>>(IPC.CONTEXT_SET, (payload) => {
+    const record = asRecord(payload)
+    // 字段缺省 = 不变；显式 null /空串 = 清空
+    const input: { goalId?: string | null; planId?: string | null } = {}
+    if ('goalId' in record) {
+      const value = record.goalId
+      input.goalId = value === null || value === undefined ? null : String(value)
+    }
+    if ('planId' in record) {
+      const value = record.planId
+      input.planId = value === null || value === undefined ? null : String(value)
+    }
+    return repo.setActiveContext(input)
+  })
+
   handle<unknown, Awaited<ReturnType<typeof repo.savePlan>>>(IPC.PLAN_SAVE, async (payload) => {
     // 兼容两种入参：{ goalId, plan } 与文档里的裸 GeneratedPlan（无 goalId 时回退到最近创建的目标）
     let goalId = readId(payload, 'goalId')

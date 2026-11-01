@@ -4,7 +4,7 @@
    - 已有 Key 时第一步直接显示「已配置」，可替换
    - 创建目标成功后 refresh() 并进入完成页
    ============================================================ */
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { JSX } from 'react'
 import type { AppSettings, Goal, GoalKind, GoalLevel } from '@shared/contracts'
 import { Page } from '../components/layout'
@@ -81,6 +81,14 @@ export default function Onboarding(): JSX.Element {
   const hasApiKey = boot?.settings.hasApiKey ?? false
   const showKeyForm = !hasApiKey || replaceKey
   const hasGoals = (boot?.goals.length ?? 0) > 0
+
+  // 已经配过 Key 的老用户，进来直接停在「学习目标」这一步（想换 Key 可以点第一步）
+  const startedRef = useRef(false)
+  useEffect(() => {
+    if (startedRef.current || !boot) return
+    startedRef.current = true
+    if (boot.settings.hasApiKey) setStep(1)
+  }, [boot])
 
   async function saveAndTestKey(): Promise<void> {
     const key = apiKey.trim()
@@ -160,8 +168,12 @@ export default function Onboarding(): JSX.Element {
 
   return (
     <Page
-      title="开始使用 StudyFlow"
-      subtitle="三步准备就绪，之后由 AI 按天监督你的学习进度。"
+      title={hasGoals ? '添加新的学习目标' : '开始使用 StudyFlow'}
+      subtitle={
+        hasGoals
+          ? '每个目标有各自的学习计划和进度，互不影响；已有的目标会继续保留。'
+          : '三步准备就绪，之后由 AI 按天监督你的学习进度。'
+      }
       actions={
         hasGoals && step < 2 ? (
           <Button variant="subtle" size="sm" onClick={() => navigate('/')}>

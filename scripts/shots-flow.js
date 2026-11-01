@@ -102,8 +102,11 @@
     for (const [label, hash] of stops) {
       location.hash = hash
       await settle(1400)
+      notes.push(
+        label + ':' + location.hash + ':' + (document.body.innerText || '').replace(/\s+/g, ' ').slice(0, 26)
+      )
       console.log('[shot] ' + label)
-      await sleep(600)
+      await sleep(2000)
     }    await must('goal:delete', { goalId: goal.id })
   } catch (error) {
     notes.push('FAILED ' + String((error && error.message) || error))

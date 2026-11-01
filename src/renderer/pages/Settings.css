@@ -8,6 +8,45 @@
   gap: var(--s-4);
 }
 
+/* ---------- 学习目标列表 ---------- */
+.sf-settings__goals {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sf-settings__goal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: var(--c-surface-sunken);
+}
+
+.sf-settings__goal.is-current {
+  border-color: color-mix(in srgb, var(--c-accent) 45%, var(--c-border));
+  background: color-mix(in srgb, var(--c-accent) 8%, var(--c-surface-sunken));
+}
+
+.sf-settings__goal-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sf-settings__goal-main .sf-settings__row-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .sf-settings__form--row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

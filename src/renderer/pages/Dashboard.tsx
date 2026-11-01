@@ -15,6 +15,7 @@ import {
   ErrorState,
   ProgressRing,
   SegmentedBar,
+  Select,
   Skeleton
 } from '../components/ui'
 import { call } from '../lib/api'
@@ -60,15 +61,18 @@ function PlanArt(): JSX.Element {
 
 export default function Dashboard(): JSX.Element {
   const boot = useAppStore(selectBoot)
+  const setContext = useAppStore((state) => state.setContext)
   const goals = boot?.goals ?? []
+  const activeGoalId = boot?.activeGoalId ?? null
+  const plans = boot?.plans ?? []
   const plan = boot?.activePlan ?? null
-  const goal = useMemo(() => {
-    const goalId = plan?.goalId ?? goals[0]?.id ?? null
-    return goalId ? goals.find((item) => item.id === goalId) ?? null : null
-  }, [goals, plan])
+  const goal = useMemo(
+    () => (activeGoalId ? goals.find((item) => item.id === activeGoalId) ?? null : null),
+    [goals, activeGoalId]
+  )
 
-  const goalId = plan?.goalId ?? goal?.id ?? null
-  const goalTitle = plan?.goalTitle ?? goal?.title ?? '学习目标'
+  const goalId = activeGoalId
+  const goalTitle = goal?.title ?? plan?.goalTitle ?? '学习目标'
   const bootProgress = boot?.progress ?? null
   const stats = boot?.stats ?? null
 
@@ -187,6 +191,52 @@ export default function Dashboard(): JSX.Element {
 
   return (
     <Page width="wide">
+      {/* 0. 目标 / 计划切换（支持多个目标、每个目标多份计划） */}
+      <div className="dash-switch">
+        <label className="dash-switch__field">
+          <span className="dash-switch__label">学习目标</span>
+          <Select
+            value={activeGoalId ?? ''}
+            onChange={(event) => {
+              const next = event.target.value
+              if (next !== '' && next !== activeGoalId) void setContext({ goalId: next })
+            }}
+          >
+            {goals.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.title} · {formatPercent(item.progress)}
+              </option>
+            ))}
+          </Select>
+        </label>
+        <label className="dash-switch__field">
+          <span className="dash-switch__label">学习计划</span>
+          <Select
+            value={plan?.id ?? ''}
+            disabled={plans.length === 0}
+            onChange={(event) => {
+              const next = event.target.value
+              if (next !== '' && next !== plan?.id) void setContext({ planId: next })
+            }}
+          >
+            {plans.length === 0 ? <option value="">这个目标还没有计划</option> : null}
+            {plans.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.title} · {item.totalDays} 天 · 已通过 {item.passedDays}
+              </option>
+            ))}
+          </Select>
+        </label>
+        <div className="dash-switch__actions">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/setup')}>
+            + 新建目标
+          </Button>
+          <Button variant="primary" size="sm" onClick={() => navigate('/plan/new')}>
+            + 新建计划
+          </Button>
+        </div>
+      </div>
+
       {/* 1. 目标全景 */}
       <Card className="dash-hero" flush>
         <div className="dash-hero__inner">

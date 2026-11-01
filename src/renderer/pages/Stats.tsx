@@ -174,7 +174,9 @@ export default function Stats(): JSX.Element {
   const boot = useAppStore((state) => state.boot)
   const { success, danger } = useToast()
 
-  const goal = boot?.goals[0] ?? null
+  const goal = boot?.activeGoalId
+    ? boot.goals.find((item) => item.id === boot.activeGoalId) ?? null
+    : null
   const goalId = goal?.id ?? ''
 
   const [overview, setOverview] = useState<StatsOverview | null>(boot?.stats ?? null)
