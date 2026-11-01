@@ -1,7 +1,7 @@
 /**
  * 问答环节评分。
  * 关键点：模型只输出各维度 0–1 的达成度，分数一定由主进程按契约权重折算
- * （accuracy 20 / coverage 10 / example 6 / clarity 4，合计 40），避免模型算术飘。
+ * （accuracy 18 / coverage 7 / clarity 5，合计 30；不再考虑举例），避免模型算术飘。
  */
 import { SCORING } from '../../shared/contracts'
 import type { DayDetail, RecitationDimensions, RecitationView } from '../../shared/contracts'
@@ -13,7 +13,7 @@ import { buildGradeSystem, buildGradeUser } from './prompts'
 
 export interface RecitationGrade {
   dimensions: RecitationDimensions
-  /** 0–40，主进程折算 */
+  /** 0–30，主进程折算 */
   score: number
   /** 完整句子的点评，默认不超过 300 字 */
   feedback: string
@@ -29,13 +29,12 @@ function clamp01(value: number): number {
 const FEEDBACK_MAX_CHARS = SCORING.feedbackMaxChars
 const CRITICAL_GAP_MAX_CHARS = SCORING.criticalGapMaxChars
 
-/** 维度达成度 → 40 分制（权重来自 contracts.SCORING，禁止在别处另写一份） */
+/** 维度达成度 → 30 分制（权重来自 contracts.SCORING，禁止在别处另写一份） */
 export function scoreFromDimensions(dimensions: RecitationDimensions): number {
   const weights = SCORING.recitationWeights
   const raw =
     clamp01(dimensions.accuracy) * weights.accuracy +
     clamp01(dimensions.coverage) * weights.coverage +
-    clamp01(dimensions.example) * weights.example +
     clamp01(dimensions.clarity) * weights.clarity
   return Math.min(Math.max(Math.round(raw), 0), SCORING.recitationTotal)
 }
@@ -91,7 +90,7 @@ export async function gradeRecitation(
   const dimensions: RecitationDimensions = {
     accuracy: clamp01(ai.dimensions.accuracy),
     coverage: clamp01(ai.dimensions.coverage),
-    example: clamp01(ai.dimensions.example),
+    example: 0,
     clarity: clamp01(ai.dimensions.clarity)
   }
   const feedback = cleanText(ai.feedback, FEEDBACK_MAX_CHARS)

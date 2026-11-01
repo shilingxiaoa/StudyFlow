@@ -46,12 +46,15 @@ const STEPS: { key: Stage; label: string }[] = [
   { key: 'result', label: '结果' }
 ]
 
-const DIMENSIONS: { key: keyof RecitationDimensions; label: string; hint: string; weight: number }[] = [
+const ALL_DIMENSIONS: { key: keyof RecitationDimensions; label: string; hint: string; weight: number }[] = [
   { key: 'accuracy', label: '准确性', hint: '概念有没有说错', weight: SCORING.recitationWeights.accuracy },
   { key: 'coverage', label: '完整性', hint: '要点覆盖了几成', weight: SCORING.recitationWeights.coverage },
   { key: 'example', label: '举例/迁移', hint: '能举例更好，不强制', weight: SCORING.recitationWeights.example },
   { key: 'clarity', label: '清晰度', hint: '结构清楚、不堆术语', weight: SCORING.recitationWeights.clarity }
 ]
+
+/** 权重为 0 的维度（现在是 example）不再展示 */
+const DIMENSIONS = ALL_DIMENSIONS.filter((dimension) => dimension.weight > 0)
 
 function charCount(text: string): number {
   return Array.from(text).length
@@ -728,7 +731,7 @@ export default function ExamPage({ examId }: ExamProps): JSX.Element {
           <div className="exam-bar__info">
             <span>阶段 B · 回答追问</span>
             <span className="exam-bar__hint">
-              {followEnough ? '提交后按准确性、完整性、举例/迁移、清晰度打分。' : `还差 ${SCORING.minFollowupChars - followCount} 字。`}
+              {followEnough ? '提交后按准确性、完整性、清晰度打分。' : `还差 ${SCORING.minFollowupChars - followCount} 字。`}
             </span>
           </div>
           <div className="exam-bar__actions">

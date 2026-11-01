@@ -111,7 +111,7 @@ export const EXAM_JSON_SCHEMA: Record<string, unknown> = {
   properties: {
     questions: {
       type: 'array',
-      description: '必须正好 2 题：1 道 single_choice + 1 道 fill_blank',
+      description: '必须正好 7 题，全部 single_choice（每题 4 个选项）',
       items: {
         type: 'object',
         additionalProperties: false,
@@ -125,23 +125,22 @@ export const EXAM_JSON_SCHEMA: Record<string, unknown> = {
           'explanation'
         ],
         properties: {
-          type: { type: 'string', enum: ['single_choice', 'fill_blank'] },
+          type: { type: 'string', enum: ['single_choice'] },
           knowledgePoint: { type: 'string', description: '考查的知识点名称' },
           stem: { type: 'string', description: '题干' },
           options: {
-            // DeepSeek 的 strict json_schema 不接受联合类型（`type: ['array','null']` 直接 400），
-            // 填空题给空数组，题型由 examiner 的 normalizeExam 再判定。
+            // DeepSeek 的 strict json_schema 不接受联合类型（`type: ['array','null']` 直接 400）
             type: 'array',
-            description: 'single_choice 必须 4 个选项；fill_blank 给空数组',
+            description: '必须 4 个选项',
             items: { type: 'string' }
           },
           answer: {
             type: 'string',
-            description: 'single_choice 填正确选项下标（0 起，如 "2"）；fill_blank 填标准答案原文'
+            description: '正确选项的下标（0 起，如 "2"）'
           },
           answerAliases: {
             type: 'array',
-            description: '填空题的等价写法（含别名/简称/英文），2-4 个；单选题给空数组',
+            description: '一律给空数组（单选题不需要别名）',
             items: { type: 'string' }
           },
           explanation: { type: 'string', description: '解析，60 字以内' }
@@ -174,10 +173,9 @@ export const gradeAiZ = z.object({
     .object({
       accuracy: z.number().default(0),
       coverage: z.number().default(0),
-      example: z.number().default(0),
       clarity: z.number().default(0)
     })
-    .default({ accuracy: 0, coverage: 0, example: 0, clarity: 0 }),
+    .default({ accuracy: 0, coverage: 0, clarity: 0 }),
   feedback: z.string().default(''),
   critical_gap: z.string().default('')
 })
@@ -193,11 +191,10 @@ export const GRADE_JSON_SCHEMA: Record<string, unknown> = {
     dimensions: {
       type: 'object',
       additionalProperties: false,
-      required: ['accuracy', 'coverage', 'example', 'clarity'],
+      required: ['accuracy', 'coverage', 'clarity'],
       properties: {
         accuracy: { type: 'number', description: '准确性达成度 0-1' },
         coverage: { type: 'number', description: '要点覆盖度 0-1' },
-        example: { type: 'number', description: '例子/类比的支撑度 0-1' },
         clarity: { type: 'number', description: '讲解清晰度 0-1' }
       }
     },

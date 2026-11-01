@@ -498,15 +498,15 @@ export interface RendererApi {
 // ───────────────────────────── 业务常量 ─────────────────────────────
 
 export const SCORING = {
-  /** 客观题：3 道一起出（2 单选 + 1 填空），每题 20 分 */
-  objectivePerQuestion: 20,
-  objectiveTotal: 60,
-  objectiveCount: 3,
+  /** 客观题：7 道单选，每题 10 分 */
+  objectivePerQuestion: 10,
+  objectiveTotal: 70,
+  objectiveCount: 7,
   /** 问答（原来的费曼复述改成了 AI 提问、你来回答） */
-  recitationTotal: 40,
+  recitationTotal: 30,
   recitationQuestionCount: 2,
-  /** 举例/迁移只是加分项，不强制 */
-  recitationWeights: { accuracy: 20, coverage: 10, example: 6, clarity: 4 },
+  /** 只看准确性/完整性/清晰度；example 恒为 0（历史数据仍按 0 权计算，界面不再展示） */
+  recitationWeights: { accuracy: 18, coverage: 7, example: 0, clarity: 5 },
   passLine: 80,
   partialLine: 60,
   partialCredit: 0.6,

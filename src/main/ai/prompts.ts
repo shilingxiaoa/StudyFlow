@@ -83,18 +83,14 @@ export function buildExamSystem(): string {
 
 你的任务：为「今天这一天」出一次小测，只考今天学的内容，不考未来内容。
 
-必须正好出 3 道客观题，顺序固定：
-- 第 1 题：single_choice（单选，4 个选项，1 个正确）
-- 第 2 题：single_choice（单选，考另一个知识点，4 个选项）
-- 第 3 题：fill_blank（填空，答案是 1 个词或 1 个短句）
+必须正好出 7 道单选（single_choice），全部 4 个选项、1 个正确，题型不要出现填空：
 
 出题原则：
-1. 三道题必须考不同的知识点，且都要落在今天 checkpoints 的范围内。
-2. 不考死记硬背的细枝末节，考「能不能用」：单选考辨别/易混点，填空考核心定义或关键数值。
+1. 七道题必须考不同的知识点，且都要落在今天 checkpoints 的范围内；由易到难排列。
+2. 不考死记硬背的细枝末节，考「能不能用」：辨别易混点、判断适用场景、找出错误说法。
 3. 干扰项要合理（常见误解），不要出现「以上都不对」。
-4. answer 字段：single_choice 填正确选项的下标字符串（0 起，如 "2"）；fill_blank 填标准答案原文，别带标点。
-5. answerAliases：填空题给 2–4 个等价写法（简写、别名、英文、带/不带单位）；单选题给空数组。
-6. explanation：60 字以内，说清为什么，不重复题干。
+4. answer 字段：填正确选项的下标字符串（0 起，如 "2"）；answerAliases 一律给空数组。
+5. explanation：60 字以内，说清为什么，不重复题干。
 
 另外生成 1 个「问答」：不是让人复述，而是像助教那样直接提 1 个能检验是否真懂的问题：
 - prompt：直接提问（一句话，30–60 字），问到因果/边界/易混点，别问「什么是 XX」这种背书题；也不要铺场景或角色扮演（不要出现「假设对面是……」「给新人讲」这类写法）。
@@ -121,7 +117,7 @@ export function buildExamUser(input: ExamPromptInput): string {
     lines.push(clip(materialExcerpt, 4000))
   }
   lines.push('')
-  lines.push('【输出】按 schema 输出 json：questions 正好 3 题（2 单选 + 1 填空），另加 recitation。')
+  lines.push('【输出】按 schema 输出 json：questions 正好 7 题，全部 single_choice（4 选项），另加 recitation。')
   return lines.join('\n')
 }
 
@@ -178,14 +174,15 @@ export function buildGradeSystem(): string {
 你的任务：给学习者对「问答环节」的回答打分。这是一次简短的口头问答，不是写论文：
 - 回答短、口语化、有口语的跳跃，都是正常的，不要因为「不够长」扣分。
 - 只按内容是否说对、说到点上来判断，不要看字数、格式、文采。
-你只输出各维度的达成度（0–1 的小数），总分由主进程按 ${SCORING.recitationWeights.accuracy}/${SCORING.recitationWeights.coverage}/${SCORING.recitationWeights.example}/${SCORING.recitationWeights.clarity} 的权重折算，
+你只输出各维度的达成度（0–1 的小数），总分由主进程按 ${SCORING.recitationWeights.accuracy}/${SCORING.recitationWeights.coverage}/${SCORING.recitationWeights.clarity} 的权重折算，
 你不要自己算总分，也不要在文字里报分数。
 
 判分尺度（严格执行，保证不同 Day 之间可比）：
 - accuracy（准确性，权重最高）：1.0 = 没有事实错误，因果正确；0.7 = 方向对但有 1 处含混；0.4 = 关键概念说不清；0 = 答错或离题。
 - coverage（完整性）：按回答覆盖了几个隐藏要点给分（1.0 全中，0.5 中一半，0 = 一个都没提到）。回答短但点到了，就给高分。
-- example（举例/迁移，加分项）：1.0 = 自己举了贴切例子或主动换场景说明；0.5 = 沾到一点；0 = 没举例。**没举例不扣分**，这一维只是锦上添花。
 - clarity（表达清晰度）：1.0 = 说人话、有因果、听得懂；0.5 = 能懂但绕；0 = 看不懂。
+
+**不要评价有没有举例**：举不举例不影响任何一维的分数，没举例绝不扣分。
 
 feedback：写 2–4 句完整的话（300 字以内）。先肯定答对的地方，再指出 1 个最该补的点，可以补一句具体怎么补或一个更准确的说法。语气像耐心的助教，不要空泛夸奖，也不要因为回答短而说教。**必须是完整句子，不要写到一半就被截断。**
 critical_gap：写 1–2 句完整的话（80 字以内），指出最致命的一个知识缺口，具体到知识点并说清它为什么关键，不要写「理解不深」这类空话。**同样不许出现半句。**`

@@ -76,17 +76,16 @@ function fallbackRecitation(day: DayDetail): { prompt: string; keyPoints: string
   }
 }
 
-/** 校验并整形一次出题结果：2 单选 + 1 填空 + 1 个问答 */
+/** 校验并整形一次出题结果：7 道单选 + 1 个问答 */
 export function normalizeExam(ai: ExamAi, day: DayDetail): ExamDraft {
   const all = (ai.questions ?? []).map(normalizeQuestion).filter((q): q is QuestionInput => q !== null)
   const choices = all.filter((q) => q.type === 'single_choice')
-  const blank = all.find((q) => q.type === 'fill_blank')
 
-  if (choices.length < 2 || !blank) {
+  if (choices.length < SCORING.objectiveCount) {
     const types = (ai.questions ?? []).map((q) => q.type).join('/') || '空'
     throw new AppError(
       'AI_BAD_OUTPUT',
-      `出题不符合要求（需要 2 单选 + 1 填空，实际：${types}），请重试`
+      `出题不符合要求（需要 ${SCORING.objectiveCount} 道单选，实际可用的只有 ${choices.length} 道；题型：${types}），请重试`
     )
   }
 
@@ -98,7 +97,7 @@ export function normalizeExam(ai: ExamAi, day: DayDetail): ExamDraft {
     keyPoints: keyPoints.length > 0 ? keyPoints : fallback.keyPoints
   }
 
-  return { questions: [choices[0], choices[1], blank], recitation }
+  return { questions: choices.slice(0, SCORING.objectiveCount), recitation }
 }
 
 /** 调 AI 出题（不落库，落库由 aiHandlers 负责） */
