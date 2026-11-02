@@ -1,15 +1,18 @@
 /* ============================================================
    StudyFlow · 应用外壳
+   - 登录状态未知：启动屏（读取 auth:status）
+   - 未登录：只渲染登录页，不挂 Layout、不触发 bootstrap
    - boot 为空：全屏启动屏 / 加载失败页
    - 没有目标：强制进入引导（#/setup）
    - 其余：Layout + 当前 hash 路由页面（页面懒加载）
    ============================================================ */
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect, useRef } from 'react'
 import type { JSX } from 'react'
 import { Layout } from './components/layout'
 import { Button, ErrorState, Spinner, ToastHost } from './components/ui'
 import { navigate, useRoute } from './lib/router'
 import type { Route } from './lib/router'
+import LoginPage from './pages/Login'
 import { useAppStore } from './store/app'
 import './styles/shell.css'
 
@@ -148,14 +151,52 @@ export default function App(): JSX.Element {
   const boot = useAppStore((state) => state.boot)
   const loading = useAppStore((state) => state.loading)
   const error = useAppStore((state) => state.error)
+  const auth = useAppStore((state) => state.auth)
+  const authLoading = useAppStore((state) => state.authLoading)
+  const authError = useAppStore((state) => state.authError)
   const load = useAppStore((state) => state.load)
+  const loadAuth = useAppStore((state) => state.loadAuth)
   const route = useRoute()
 
-  const needsSetup = boot !== null && boot.goals.length === 0 && route.path !== '/setup'
+  // 启动时自己问一次登录状态（main.tsx 的 load() 也会问；这里只兜底一次，
+  // 避免和 load() 抢跑时重复请求，也避免失败后无限自动重试）
+  const authAsked = useRef(false)
+  useEffect(() => {
+    if (authAsked.current || auth !== null || authLoading || loading) return
+    authAsked.current = true
+    void loadAuth()
+  }, [auth, authLoading, loading, loadAuth])
+
+  const needsSetup = auth !== null && auth.authenticated && boot !== null && boot.goals.length === 0 && route.path !== '/setup'
 
   useEffect(() => {
     if (needsSetup) navigate('/setup')
   }, [needsSetup])
+
+  // 登录状态还没拿到：先看启动屏；读取失败才显示可重试的错误页
+  if (auth === null) {
+    if (authError !== null) {
+      return (
+        <BootFailure
+          message={authError}
+          onRetry={() => {
+            void loadAuth()
+          }}
+        />
+      )
+    }
+    return <BootSplash title="正在启动" description="正在读取登录状态…" busy={authLoading || loading} />
+  }
+
+  // 未登录：只渲染登录页（ToastHost 是 portal，不占布局，只为让提示可见）
+  if (!auth.authenticated) {
+    return (
+      <>
+        <LoginPage />
+        <ToastHost />
+      </>
+    )
+  }
 
   if (!boot) {
     if (error !== null) {

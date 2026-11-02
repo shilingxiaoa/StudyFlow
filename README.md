@@ -9,6 +9,7 @@
 - 结果页：分数 + 三维得分 + AI 点评（2–4 句）和「最大的漏洞」（1–2 句），文字按句子边界截断，不会出现半句
 - 教案：进 Day 后可以「让 AI 备课」，按目标与资料写出分节讲解、练习、每个任务的具体步骤、易错点和自检清单（按天缓存，可重新备课）
 - 答疑：教案页底部可以直接提问，AI 对照这一天和你的资料回答
+- 账号：本地账号 + 密码登录（只存本机，不联网），每个账号独立数据，退出不删数据
 - 资料：可以把 .md / .txt / .docx 教材导进来，生成计划、备课与出题时 AI 会参考原文（最多 3 份、每份前 5000 字）
 - 多目标：可以同时学多个目标，每个目标有各自的计划、进度、教案和统计，看板顶部一键切换；同一个目标也能存多份计划（旧的自动归档，数据保留）
 
@@ -38,7 +39,7 @@ npm install
 npm run dev        # 开发模式（主进程 + 渲染进程热更新）
 npm run typecheck  # 主进程 + 渲染进程类型检查
 npm run build      # 产物输出到 out/
-npm run smoke      # 真实 Electron 冒烟（58 项非 AI 链路检查，失败退出码 1）
+npm run smoke      # 真实 Electron 冒烟（76 项非 AI 链路检查，失败退出码 1）
 npm run dist       # 打包 Windows 安装版 + 便携版（输出到 release/）
 npm run dist:dir   # 只出免安装目录 release/win-unpacked/
 npm run smoke:packaged  # 对打包后的 exe 再跑一遍冒烟
@@ -60,7 +61,17 @@ npm run dist     # → release/StudyFlow-<版本>-setup.exe（NSIS 安装版）+
 
 界面截图（`node scripts/smoke.mjs scripts/shots-flow.js .shots` 自动生成，脚本里 `console.log('[shot] <label>')` 即触发主进程截图）：
 
-| 学习看板 | 今日 Day（教案 / 任务清单两个 Tab） |
+| 登录 / 创建账号 | 学习看板 |
+|---|---|
+| ![](./.shots/login.png) | ![](./.shots/dashboard.png) |
+
+| 今日 Day（教案 / 任务清单两个 Tab） | 复盘统计 |
+|---|---|
+| ![](./.shots/day.png) | ![](./.shots/stats.png) |
+
+| 设置（含账号卡） | 每日教案（AI 备课） |
+|---|---|
+| ![](./.shots/settings.png) | ![](./.shots/lesson.png) |
 |---|---|
 | ![](./.shots/dashboard.png) | ![](./.shots/day.png) |
 
@@ -83,6 +94,8 @@ npm run dist     # → release/StudyFlow-<版本>-setup.exe（NSIS 安装版）+
 ```
 src/
 ├─ shared/contracts.ts      # 全局契约：类型 + IPC 通道 + 计分常量
+├─ main/auth/service.ts     # 本地账号：scrypt 密码、会话、老数据收编
+├─ main/ipc/authHandlers.ts # auth:* 通道（登录/注册/退出/改密码）
 ├─ main/                    # Electron 主进程
 │  ├─ index.ts              # 窗口与生命周期（含 SF_SMOKE 探针）
 │  ├─ preload.ts            # contextBridge 白名单
@@ -96,7 +109,7 @@ src/
    └─ pages/                # 看板 / 今日 / 考试 / 计划 / 统计 / 设置 / 引导
 scripts/
 ├─ smoke.mjs                # 冒烟入口（启动 Electron 并解析结果）
-├─ smoke-flow.js            # 注入渲染进程的链路脚本（55 项断言）
+├─ smoke-flow.js            # 注入渲染进程的链路脚本（76 项断言）
 ├─ shots-flow.js            # 造演示数据 + 逐页打点截图
 ├─ shots-lesson.js          # 用已备好课的库拍教案截图
 └─ fixtures.mjs             # 生成导入测试素材（.md / .docx / .pdf）
@@ -127,6 +140,10 @@ docs/                       # 产品 / 技术 / API / 方案四份设计文档
 | 教案：未生成→empty、无 Key 被拦、未备课不能答疑 | ✅ |
 | 真实 Key 跑通备课 → 5 节讲解 / 3 道练习 / 4 组任务步骤 / 答疑 | ✅ |
 | 冒烟使用独立数据目录（不污染真实库） | ✅ |
+| 未登录时数据通道返回 `AUTH_REQUIRED`，界面回到登录页 | ✅ |
+| 注册 → 登录态 / 错误密码被拒 / 改密码后旧密码失效 | ✅ |
+| 两个账号数据互相看不见（各自一份 `users/<id>/studyflow.db`） | ✅ |
+| 首次建号收编登录前的旧库（副本上验证：30 天计划与今日 Day 完整） | ✅ |
 | 主题切换（dark/light/跟随系统）实时生效 | ✅ |
 | 五个页面渲染无控制台报错、无破图、截图已归档 | ✅ |
 | AI 真实链路（生成计划 / 出题 / 问答评分 / 教案 / 答疑） | ✅ 已用真实 Key 跑通（计划 30 天 21s、出题 2.7s、评分 1.0s、教案 5 节 18s / ¥0.013、答疑 1.4s） |
@@ -149,6 +166,7 @@ docs/                       # 产品 / 技术 / API / 方案四份设计文档
 
 ## 已知边界
 
+- 账号是「本机账号」：不联网、不跨设备同步；忘记密码无法找回（没有服务器可重置）
 - 只支持文字输入（不做语音复述）
 - 教案按天生成并缓存：第一次要点「让 AI 备课」，重新备课会再花一次调用（约 ¥0.01–0.02）
 - 答疑消息只存在当前页面，刷新即清空（不写入数据库）

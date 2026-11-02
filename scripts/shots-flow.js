@@ -14,10 +14,18 @@
   const notes = []
 
   try {
-    // 空库首屏（引导页）
-    await sleep(900)
-    console.log('[shot] setup')
-    await sleep(500)
+    // 空库首屏（登录/建号页）
+    await sleep(1500)
+    console.log('[shot] login')
+    // 主进程的截图会延迟 1500ms 落盘，这里多等一会儿，避免拍到注册后的主页
+    await sleep(2200)
+
+    // 建一个演示账号（截图目录是全新的数据目录）
+    await must('auth:register', {
+      email: `shots-${Date.now()}@local.test`,
+      password: 'shots-pass-1',
+      displayName: '小徐'
+    })
 
     // 清场
     const boot = await must('app:bootstrap')

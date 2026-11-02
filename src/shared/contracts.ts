@@ -20,6 +20,8 @@ export type ErrorCode =
   | 'NOT_FOUND'
   | 'VALIDATION'
   | 'DB'
+  | 'AUTH_REQUIRED'
+  | 'AUTH_FAILED'
   | 'UNKNOWN';
 
 export const MODEL_ID = 'deepseek-flash'; // = DeepSeek-V4.1-Flash-1017
@@ -416,10 +418,42 @@ export interface ContextInput {
   planId?: string | null;
 }
 
+// ───────────────────────────── 账号（本地登录） ─────────────────────────────
+
+/** 本机账号；不联网、不上传，密码只存加盐哈希 */
+export interface AuthAccount {
+  id: string;
+  email: string;
+  displayName: string;
+  createdAt: string;
+  /** 上一次登录时间；从未登录过为 null */
+  lastLoginAt: string | null;
+}
+
+/**
+ * 登录状态。渲染进程启动时先问这个，再决定显示登录页还是主界面。
+ *  - hasAccounts=false 且 legacyDataAvailable=true：第一次升级到带登录的版本，
+ *    提示用户「用现有数据创建账号」。
+ *  - remember=true：下次启动可以免密码进入（可在设置里关掉）。
+ */
+export interface AuthStatus {
+  authenticated: boolean;
+  account: AuthAccount | null;
+  hasAccounts: boolean;
+  /** 这台电脑上存在登录功能之前留下的学习数据，可以归到新账号 */
+  legacyDataAvailable: boolean;
+}
+
 // ───────────────────────────── IPC 通道表 ─────────────────────────────
 
 export const IPC = {
   APP_BOOTSTRAP: 'app:bootstrap',
+
+  AUTH_STATUS: 'auth:status',
+  AUTH_REGISTER: 'auth:register',
+  AUTH_LOGIN: 'auth:login',
+  AUTH_LOGOUT: 'auth:logout',
+  AUTH_CHANGE_PASSWORD: 'auth:changePassword',
 
   SETTINGS_GET: 'settings:get',
   SETTINGS_UPDATE: 'settings:update',
@@ -478,6 +512,8 @@ export const PUSH = {
   TASK_CHANGED: 'push:taskChanged',
   SETTINGS_CHANGED: 'push:settingsChanged',
   AI_STAGE: 'push:aiStage',
+  /** 登录状态变了（登录 / 退出 / 改密码后重新建会话）；payload 是 AuthStatus */
+  AUTH_CHANGED: 'push:authChanged',
 } as const;
 
 export interface AiStage {

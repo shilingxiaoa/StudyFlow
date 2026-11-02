@@ -19,6 +19,8 @@ export const CODE_LABEL: Record<ErrorCode, string> = {
   NOT_FOUND: '找不到对应的数据',
   VALIDATION: '输入内容不合法',
   DB: '本地数据读写失败',
+  AUTH_REQUIRED: '请先登录',
+  AUTH_FAILED: '邮箱或密码不对',
   UNKNOWN: '发生了未知错误'
 }
 

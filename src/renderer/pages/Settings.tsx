@@ -1,11 +1,12 @@
 /* ============================================================
    StudyFlow · 设置（#/settings）
-   分区卡片：DeepSeek API / 学习偏好 / 提醒与复检 / 数据管理
+   分区卡片：账号 / DeepSeek API / 学习偏好 / 提醒与复检 / 学习目标 / 数据管理
    保存策略：每个分区一个显式保存按钮，成功与失败都给 toast
    ============================================================ */
 import { useEffect, useState } from 'react'
-import type { JSX } from 'react'
-import type { AppSettings } from '@shared/contracts'
+import type { FormEvent, JSX } from 'react'
+import type { AppSettings, AuthStatus } from '@shared/contracts'
+import { IPC } from '@shared/contracts'
 import { Page } from '../components/layout'
 import {
   Badge,
@@ -17,7 +18,7 @@ import {
   useToast
 } from '../components/ui'
 import { call, errorMessage } from '../lib/api'
-import { formatMinutes, formatPercent } from '../lib/format'
+import { formatDate, formatMinutes, formatPercent } from '../lib/format'
 import { navigate } from '../lib/router'
 import { useAppStore } from '../store/app'
 import './Settings.css'
@@ -76,6 +77,10 @@ export default function Settings(): JSX.Element {
   const goal = activeGoalId ? goals.find((item) => item.id === activeGoalId) ?? null : null
   const activePlan = boot?.activePlan ?? null
   const setContext = useAppStore((state) => state.setContext)
+  const auth = useAppStore((state) => state.auth)
+  const logout = useAppStore((state) => state.logout)
+  const refreshAuth = useAppStore((state) => state.refreshAuth)
+  const account = auth?.account ?? null
 
   // ---- API ----
   const [keyDraft, setKeyDraft] = useState('')
@@ -99,6 +104,16 @@ export default function Settings(): JSX.Element {
   // ---- 数据管理 ----
   const [confirm, setConfirm] = useState<'goal' | 'plan' | null>(null)
   const [deleting, setDeleting] = useState<'goal' | 'plan' | null>(null)
+
+  // ---- 账号 ----
+  const [pwOpen, setPwOpen] = useState(false)
+  const [oldPassword, setOldPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [pwError, setPwError] = useState<string | null>(null)
+  const [changingPw, setChangingPw] = useState(false)
+  const [logoutOpen, setLogoutOpen] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
 
   useEffect(() => {
     if (!settings) return
@@ -242,6 +257,60 @@ export default function Settings(): JSX.Element {
     }
   }
 
+  function closePasswordForm(): void {
+    setPwOpen(false)
+    setOldPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+    setPwError(null)
+  }
+
+  async function changePassword(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault()
+    if (changingPw) return
+    if (oldPassword === '') {
+      setPwError('请输入旧密码')
+      return
+    }
+    if (newPassword.length < 8) {
+      setPwError('新密码至少 8 位')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setPwError('两次输入的新密码不一致')
+      return
+    }
+
+    setChangingPw(true)
+    setPwError(null)
+    try {
+      await call<AuthStatus>(IPC.AUTH_CHANGE_PASSWORD, { oldPassword, newPassword })
+      await refreshAuth()
+      closePasswordForm()
+      success('密码已更新')
+    } catch (err) {
+      const message = errorMessage(err)
+      setPwError(message)
+      danger(message)
+    } finally {
+      setChangingPw(false)
+    }
+  }
+
+  async function confirmLogout(): Promise<void> {
+    setLoggingOut(true)
+    try {
+      await logout()
+      // logout() 失败只 toast 不抛错：只有真的退出了才关弹窗
+      if (useAppStore.getState().auth?.authenticated === false) {
+        setLogoutOpen(false)
+        success('已退出登录')
+      }
+    } finally {
+      setLoggingOut(false)
+    }
+  }
+
   if (!boot || !settings) {
     return (
       <Page title="设置" subtitle="应用配置与数据管理">
@@ -257,6 +326,111 @@ export default function Settings(): JSX.Element {
 
   return (
     <Page title="设置" subtitle="应用配置与数据管理">
+      {/* ---------- 账号 ---------- */}
+      <Card
+        title="账号"
+        subtitle="本地账号，只在这台电脑上使用。"
+        actions={
+          <Badge tone="accent" dot>
+            本地
+          </Badge>
+        }
+      >
+        {account === null ? (
+          <p className="sf-muted">正在读取账号…</p>
+        ) : (
+          <div className="sf-settings__account">
+            <div className="sf-settings__account-head">
+              <span className="sf-settings__account-avatar" aria-hidden="true">
+                {account.displayName.trim().charAt(0) || account.email.trim().charAt(0) || '?'}
+              </span>
+              <div className="sf-settings__account-main">
+                <span className="sf-settings__account-name">{account.displayName}</span>
+                <span className="sf-settings__account-mail">{account.email}</span>
+              </div>
+            </div>
+
+            <dl className="sf-settings__account-facts">
+              <div className="sf-settings__account-fact">
+                <dt>注册时间</dt>
+                <dd>{formatDate(account.createdAt, { withYear: true, withWeekday: false })}</dd>
+              </div>
+              <div className="sf-settings__account-fact">
+                <dt>上次登录</dt>
+                <dd>
+                  {account.lastLoginAt !== null
+                    ? formatDate(account.lastLoginAt, { withYear: true, withWeekday: false })
+                    : '本次是第一次登录'}
+                </dd>
+              </div>
+            </dl>
+
+            <p className="sf-settings__account-note">数据只在这台电脑上，退出登录不会删除数据。</p>
+
+            <div className="sf-settings__account-actions">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  if (pwOpen) closePasswordForm()
+                  else setPwOpen(true)
+                }}
+              >
+                {pwOpen ? '收起修改密码' : '修改密码'}
+              </Button>
+              <Button size="sm" variant="danger" onClick={() => setLogoutOpen(true)}>
+                退出登录
+              </Button>
+            </div>
+
+            {pwOpen ? (
+              <form className="sf-settings__account-form" onSubmit={(event) => void changePassword(event)} noValidate>
+                <div className="sf-settings__account-form-grid">
+                  <Input
+                    label="旧密码"
+                    type="password"
+                    autoComplete="current-password"
+                    value={oldPassword}
+                    disabled={changingPw}
+                    onChange={(event) => setOldPassword(event.target.value)}
+                  />
+                  <Input
+                    label="新密码"
+                    type="password"
+                    autoComplete="new-password"
+                    hint="至少 8 位。"
+                    value={newPassword}
+                    disabled={changingPw}
+                    onChange={(event) => setNewPassword(event.target.value)}
+                  />
+                  <Input
+                    label="确认新密码"
+                    type="password"
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    disabled={changingPw}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
+                  />
+                </div>
+                {pwError !== null ? (
+                  <p className="sf-settings__account-error" role="alert">
+                    {pwError}
+                  </p>
+                ) : null}
+                <div className="sf-settings__account-form-actions">
+                  <Button size="sm" variant="ghost" type="button" disabled={changingPw} onClick={closePasswordForm}>
+                    取消
+                  </Button>
+                  <Button size="sm" type="submit" loading={changingPw}>
+                    保存新密码
+                  </Button>
+                </div>
+              </form>
+            ) : null}
+          </div>
+        )}
+      </Card>
+
       {/* ---------- DeepSeek API ---------- */}
       <Card
         title="DeepSeek API"
@@ -565,6 +739,28 @@ export default function Settings(): JSX.Element {
       >
         <p className="sf-settings__modal-text">
           计划「{activePlan?.title ?? ''}」会被删除，目标会保留；之后可以重新生成计划。
+        </p>
+      </Modal>
+
+      <Modal
+        open={logoutOpen}
+        title="退出登录？"
+        onClose={() => {
+          if (!loggingOut) setLogoutOpen(false)
+        }}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setLogoutOpen(false)} disabled={loggingOut}>
+              取消
+            </Button>
+            <Button variant="danger" loading={loggingOut} onClick={() => void confirmLogout()}>
+              退出登录
+            </Button>
+          </>
+        }
+      >
+        <p className="sf-settings__modal-text">
+          退出后会回到登录页；学习数据只保存在这台电脑上，退出登录不会删除数据，重新登录即可继续。
         </p>
       </Modal>
     </Page>

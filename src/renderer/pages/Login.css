@@ -1,0 +1,142 @@
+/* ============================================================
+   StudyFlow · 本地登录页
+   全屏居中卡片；只用 tokens.css 的令牌，不写死颜色/间距
+   ============================================================ */
+
+.sf-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-8) var(--s-6);
+  overflow-y: auto;
+  background: var(--c-glow);
+}
+
+.sf-login__panel {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  animation: sf-rise-in var(--dur-3) var(--ease);
+}
+
+/* ── 品牌区 ── */
+
+.sf-login__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  text-align: center;
+}
+
+.sf-login__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--r-lg);
+  background: linear-gradient(160deg, var(--c-accent), var(--c-accent-press));
+  box-shadow: var(--sh-accent);
+  color: var(--c-on-accent);
+}
+
+.sf-login__brand-name {
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.01em;
+  color: var(--c-text);
+}
+
+.sf-login__tagline {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--c-text-3);
+}
+
+/* ── 卡片与表单 ── */
+
+.sf-login__card {
+  width: 100%;
+}
+
+.sf-login__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.sf-login__note {
+  margin-bottom: var(--s-4);
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--c-accent-line);
+  border-radius: var(--r-md);
+  background: var(--c-accent-soft);
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+}
+
+.sf-login__error {
+  margin: 0;
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--c-danger-line);
+  border-radius: var(--r-sm);
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+}
+
+.sf-login__hint {
+  margin: 0;
+  color: var(--c-text-3);
+  font-size: var(--fs-sm);
+}
+
+.sf-login__switch {
+  margin: var(--s-4) 0 0;
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--c-text-3);
+}
+
+.sf-login__link {
+  margin-left: var(--s-1);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--c-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.sf-login__link:hover {
+  color: var(--c-accent-hover);
+}
+
+.sf-login__link:focus-visible {
+  outline: 2px solid var(--c-border-focus);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+.sf-login__fineprint {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-2xs);
+  line-height: var(--lh-normal);
+  color: var(--c-text-3);
+}
+
+@media (max-width: 480px) {
+  .sf-login {
+    align-items: flex-start;
+    padding: var(--s-6) var(--s-4);
+  }
+}

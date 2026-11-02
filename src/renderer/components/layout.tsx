@@ -5,10 +5,11 @@
 import { useEffect } from 'react'
 import type { JSX, ReactNode } from 'react'
 import { Link, useRoute } from '../lib/router'
+import { useAppStore } from '../store/app'
 import './layout.css'
 
 /** 与 package.json 的 version 保持一致（渲染层不读 package.json，避免把依赖清单打进包） */
-const APP_VERSION = '1.4.0'
+const APP_VERSION = '1.5.0'
 
 function IconDashboard(): JSX.Element {
   return (
@@ -69,7 +70,9 @@ export interface LayoutProps {
 
 export function Layout({ children }: LayoutProps): JSX.Element {
   const { path } = useRoute()
+  const account = useAppStore((state) => state.auth?.account ?? null)
   const activeTo = NAV.find((item) => item.match(path))?.to ?? null
+  const initial = account === null ? '' : account.displayName.trim().charAt(0) || account.email.trim().charAt(0) || '?'
 
   // 路由切换后内容区回到顶部（否则从长页面跳到短页面会停在半空）
   useEffect(() => {
@@ -115,8 +118,25 @@ export function Layout({ children }: LayoutProps): JSX.Element {
         </nav>
 
         <div className="sf-sidebar__foot">
-          <span className="sf-sidebar__chip">本地</span>
-          <span className="sf-sidebar__version">v{APP_VERSION}</span>
+          {account !== null ? (
+            <Link to="/settings" className="sf-sidebar__account">
+              <span className="sf-sidebar__account-badge" aria-hidden="true">
+                {initial}
+              </span>
+              <span className="sf-sidebar__account-text">
+                <span className="sf-sidebar__account-name" title={account.displayName}>
+                  {account.displayName}
+                </span>
+                <span className="sf-sidebar__account-mail" title={account.email}>
+                  {account.email}
+                </span>
+              </span>
+            </Link>
+          ) : null}
+          <div className="sf-sidebar__meta">
+            <span className="sf-sidebar__chip">本地</span>
+            <span className="sf-sidebar__version">v{APP_VERSION}</span>
+          </div>
         </div>
       </aside>
 

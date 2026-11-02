@@ -2,6 +2,7 @@ import { app, shell, BrowserWindow } from 'electron'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { registerIpcHandlers } from './ipc/register'
+import { prepareAuth } from './auth/service'
 
 /**
  * 测试隔离：SF_USER_DATA=<目录> 时把数据目录整体挪走。
@@ -116,7 +117,13 @@ function createWindow(): void {
   }
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // 账号模块要先就绪：登录页在拿到会话之前就会调 auth:status
+  try {
+    await prepareAuth()
+  } catch (err) {
+    console.error('[auth] 账号模块初始化失败', err)
+  }
   registerIpcHandlers()
   createWindow()
   app.on('activate', () => {

@@ -42,7 +42,26 @@
   const screens = []
   let goalId = null
   let dayId = null
+  const accountPassword = 'smoke-pass-1'
+  const accountEmail = `smoke-${Date.now()}@local.test`
   try {
+    // 0. 账号：登录功能之后，所有数据通道都要求先登录。
+    //    冒烟数据目录是全新的，所以这里先注册；复用数据目录时回退到登录。
+    const status0 = await inv('auth:status')
+    record('auth:status 未登录', Boolean(status0 && status0.ok && status0.data.authenticated === false))
+    const registered = await inv('auth:register', {
+      email: accountEmail,
+      password: accountPassword,
+      displayName: '冒烟账号'
+    })
+    if (registered && registered.ok) {
+      record('auth:register', true)
+    } else {
+      await must('auth:login（复用数据目录）', 'auth:login', { email: accountEmail, password: accountPassword })
+    }
+    const authed = await must('auth:status 已登录', 'auth:status')
+    record('auth:hasAccounts 为真', authed.hasAccounts === true && authed.authenticated === true)
+
     // 0. 清场：删掉历史目标，保证从干净状态开始
     const boot = await must('bootstrap/初始', 'app:bootstrap')
     for (const goal of boot.goals || []) {
@@ -330,6 +349,31 @@
     record('清场后学习时长为 0（无孤儿数据）', statsAfter.totalMinutes === 0, {
       totalMinutes: statsAfter.totalMinutes
     })
+
+    // 12. 账号：数据隔离、错误密码、改密码后旧密码失效
+    await must('auth:logout', 'auth:logout')
+    const guestStatus = await must('auth:status 登出后', 'auth:status')
+    record('登出后未认证', guestStatus.authenticated === false)
+    await must('auth:register 第二个账号', 'auth:register', {
+      email: `smoke2-${Date.now()}@local.test`,
+      password: 'smoke-pass-2',
+      displayName: '冒烟二号'
+    })
+    const bootSecond = await must('bootstrap/第二账号', 'app:bootstrap')
+    record('账号隔离：二号看不到一号的数据', (bootSecond.goals || []).length === 0, {
+      goals: (bootSecond.goals || []).length
+    })
+    await must('auth:logout 二号', 'auth:logout')
+    await expectError('auth:login 密码错误', 'auth:login', { email: accountEmail, password: 'wrong-pass' }, 'AUTH_FAILED')
+    await must('auth:login 一号', 'auth:login', { email: accountEmail, password: accountPassword })
+    const changed = await must('auth:changePassword', 'auth:changePassword', {
+      oldPassword: accountPassword,
+      newPassword: 'smoke-pass-1b'
+    })
+    record('改密码后仍在登录态', changed.authenticated === true)
+    await must('auth:logout 改密后', 'auth:logout')
+    await expectError('旧密码失效', 'auth:login', { email: accountEmail, password: accountPassword }, 'AUTH_FAILED')
+    await must('新密码可登录', 'auth:login', { email: accountEmail, password: 'smoke-pass-1b' })
   } catch (error) {
     record('FAILED', false, String((error && error.message) || error))
   }

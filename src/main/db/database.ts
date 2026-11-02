@@ -32,6 +32,12 @@ let persistTimer: NodeJS.Timeout | null = null
 let dirty = false
 let txDepth = 0
 
+type SqlEngine = Awaited<ReturnType<typeof initSqlJs>>
+let engine: SqlEngine | null = null
+
+/** 当前账号的数据文件；未登录时为 null（此时一切数据操作都应该被拒绝） */
+let activeFilePath: string | null = null
+
 function locateWasm(): string {
   const candidates: string[] = []
   try {
@@ -50,13 +56,22 @@ function locateWasm(): string {
   throw new AppError('DB', '数据库引擎初始化失败：找不到 sql.js 的 sql-wasm.wasm')
 }
 
-async function bootstrap(): Promise<void> {
+/** 初始化 sql.js 引擎（进程内只需一次）；账号库和学习库共用同一个引擎 */
+export async function getEngine(): Promise<SqlEngine> {
+  if (engine) return engine
   const bytes = readFileSync(locateWasm())
   // 复制成独立的 ArrayBuffer，避免 Buffer 内存池偏移问题
   const wasmBinary = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer
-  const SQL = await initSqlJs({ wasmBinary })
+  engine = await initSqlJs({ wasmBinary })
+  return engine
+}
 
-  const file = dbPath()
+async function bootstrap(): Promise<void> {
+  const SQL = await getEngine()
+  if (!activeFilePath) {
+    throw new AppError('AUTH_REQUIRED', '还没有登录，无法读取学习数据')
+  }
+  const file = activeFilePath
   let next: SqlDatabase
   if (existsSync(file)) {
     try {
@@ -144,6 +159,9 @@ function pruneOrphans(database: SqlDatabase): number {
 /** 幂等初始化；并发调用只会真正初始化一次 */
 export async function ensureReady(): Promise<void> {
   if (db) return
+  if (!activeFilePath) {
+    throw new AppError('AUTH_REQUIRED', '请先登录，再继续')
+  }
   if (!booting) {
     booting = bootstrap().catch((err: unknown) => {
       booting = null
@@ -152,6 +170,36 @@ export async function ensureReady(): Promise<void> {
     })
   }
   await booting
+}
+
+/**
+ * 切换当前账号的数据文件。传 null 表示登出（关闭当前库并落盘）。
+ * 登录 / 退出登录 / 切换账号都走这里，保证不会两个账号的数据串在一起。
+ */
+export function setActiveDatabaseFile(file: string | null): void {
+  if (file === activeFilePath && db) return
+  flushSync()
+  if (persistTimer) {
+    clearTimeout(persistTimer)
+    persistTimer = null
+  }
+  if (db) {
+    try {
+      db.close()
+    } catch {
+      /* ignore */
+    }
+  }
+  db = null
+  booting = null
+  dirty = false
+  txDepth = 0
+  activeFilePath = file
+}
+
+/** 当前账号的数据文件路径（未登录为 null） */
+export function activeDbPath(): string | null {
+  return activeFilePath
 }
 
 export function isReady(): boolean {
@@ -172,7 +220,7 @@ function toDbError(err: unknown): Error {
 
 /** 当前 SQL 文件路径（导出/备份时用） */
 export function dbFilePath(): string {
-  return dbPath()
+  return activeFilePath ?? dbPath()
 }
 
 /** 执行写语句 */
@@ -259,7 +307,7 @@ function exportBytes(): Uint8Array {
 
 function writeNow(): void {
   if (!db || !dirty) return
-  const file = dbPath()
+  const file = activeFilePath ?? dbPath()
   mkdirSync(dirname(file), { recursive: true })
   const bytes = exportBytes()
   const tmp = `${file}.tmp`
@@ -305,4 +353,7 @@ export function closeSync(): void {
     db = null
     booting = null
   }
+  activeFilePath = null
+  dirty = false
+  txDepth = 0
 }

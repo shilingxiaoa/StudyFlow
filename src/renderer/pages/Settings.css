@@ -204,9 +204,148 @@
   transform: translateX(18px);
 }
 
+/* ---------- 账号 ---------- */
+
+.sf-settings__account {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.sf-settings__account-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.sf-settings__account-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--c-accent-line);
+  border-radius: var(--r-full);
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+}
+
+.sf-settings__account-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.sf-settings__account-name {
+  overflow: hidden;
+  color: var(--c-text);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sf-settings__account-mail {
+  overflow: hidden;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sf-settings__account-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--s-3) var(--s-4);
+  margin: 0;
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: var(--c-surface-sunken);
+}
+
+.sf-settings__account-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sf-settings__account-fact dt {
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+}
+
+.sf-settings__account-fact dd {
+  margin: 0;
+  overflow: hidden;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sf-settings__account-note {
+  margin: 0;
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+  line-height: 1.6;
+}
+
+.sf-settings__account-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.sf-settings__account-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--c-hairline);
+}
+
+.sf-settings__account-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--s-3);
+  align-items: start;
+}
+
+.sf-settings__account-error {
+  margin: 0;
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--c-danger-line);
+  border-radius: var(--r-sm);
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
+  font-size: var(--fs-sm);
+  line-height: 1.55;
+}
+
+.sf-settings__account-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s-2);
+}
+
 @media (max-width: 880px) {
   .sf-settings__form--row {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sf-settings__account-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sf-settings__account-actions {
+    flex-wrap: wrap;
   }
 
   .sf-settings__actions {
