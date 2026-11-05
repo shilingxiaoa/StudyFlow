@@ -1,6 +1,7 @@
-"""StudyFlow API —— 第一步：纯 API 骨架。
+"""StudyFlow API —— 第一、二步：API 骨架 + SQLite 存储。
 
-现在只有健康检查和一个回声接口，用来先把「服务能起来、手机能打开」这条链路跑通。
+已完成：健康检查、回声、信息接口（证明服务能起来）。
+本步新增：notes 表 —— 演示「接口 + 数据库」的最小闭环（写进去、读出来、重启还在）。
 下一步会在这里加：账号登录、数据同步、AI 网关。
 """
 
@@ -9,18 +10,32 @@ from __future__ import annotations
 import os
 import platform
 import sys
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from typing import AsyncIterator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-APP_VERSION = "0.1.0"
+from . import db
+
+APP_VERSION = "0.2.0"
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    # 进程启动时建库建表；表已存在则什么都不做。
+    db.init_db()
+    print(f"[db] SQLite 就绪：{db.DB_PATH}")
+    yield
+
 
 app = FastAPI(
     title="StudyFlow API",
     version=APP_VERSION,
     description="StudyFlow 的服务端：先跑通链路，再逐步加账号 / 同步 / AI 网关。",
+    lifespan=lifespan,
 )
 
 # 桌面客户端（Electron 的 file:// 或 http://localhost）需要跨域访问。
@@ -71,3 +86,37 @@ def info() -> dict[str, object]:
         "region": os.getenv("VERCEL_REGION", "local"),
         "time": _now(),
     }
+
+
+# ---------------------------------------------------------------- 数据库演示
+class NoteIn(BaseModel):
+    text: str = Field(
+        min_length=1,
+        max_length=500,
+        examples=["今天学会了：后端 = 接口 + 数据库"],
+    )
+
+
+class NoteOut(BaseModel):
+    id: int
+    text: str
+    created_at: str
+
+
+@app.post("/api/notes", tags=["notes"], response_model=NoteOut)
+def create_note(payload: NoteIn) -> NoteOut:
+    """写一条备忘到数据库，返回它在库里的编号。"""
+    return NoteOut(**db.create_note(payload.text))
+
+
+@app.get("/api/notes", tags=["notes"], response_model=list[NoteOut])
+def get_notes(limit: int = Query(20, ge=1, le=100)) -> list[NoteOut]:
+    """按时间倒序读出最近的备忘记。重启服务后这些数据仍然在。"""
+    return [NoteOut(**row) for row in db.list_notes(limit)]
+
+
+@app.get("/api/notes/stats", tags=["notes"])
+def note_stats() -> dict[str, object]:
+    """一共存了多少条 —— 用来证明数据真的进了文件。"""
+    return {"count": db.count_notes(), "db_path": str(db.DB_PATH)}
+

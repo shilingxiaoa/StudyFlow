@@ -1,4 +1,4 @@
-# StudyFlow 服务端（第一步：纯 API）
+# StudyFlow 服务端（第一、二步：API 骨架 + SQLite 存储）
 
 目标：先把「服务能起来 → 手机能打开 → 公网能访问」这条链路跑通，再往里加账号、同步、AI 网关。
 
@@ -56,21 +56,44 @@ vercel --prod     # 正式环境，给你 https://<项目名>.vercel.app
 
 ```
 server/
-├── app/main.py        # FastAPI 应用（现在只有 healthz / ping / echo / info）
+├── app/main.py        # FastAPI 应用：healthz / ping / echo / info + notes
+├── app/db.py          # SQLite：建表 + 增查（一个文件就是一个数据库）
 ├── api/index.py       # Vercel 入口，只做转发
-├── vercel.json        # 指定 python3.12、单次最长 60s
+├── vercel.json        # 单次最长 60s（Python 运行时由 requirements.txt 自动识别）
 ├── requirements.txt   # 生产依赖
+├── data.db            # 运行后自动生成的数据库文件（不入 git）
 └── dev.ps1            # 本机一键启动
 ```
 
 ## 四、这个骨架故意没做的事
 
-- **没有数据库**：下一步接 Neon（免费 Postgres，不需要信用卡），用 Alembic 管迁移
+- **没有真实业务表**：现在只有演示用的 `notes`；目标/计划/进度这些等客户端同步那一步再建
 - **没有登录**：下一步加注册/登录 + JWT，密码用 argon2 存哈希
 - **没有 AI**：第三步加网关。Key 只在服务端环境变量里，客户端永远拿不到
 - **没有 CI**：后面加 GitHub Actions 跑 ruff + pytest
 
-## 五、serverless 的四个坑（先记住，写代码时会撞上）
+## 五、数据存储（第二步：SQLite）
+
+现在服务端真的有数据库了：`server/data.db` —— **一个文件就是整个库**，不需要安装、不需要账号、不需要联网。
+
+```powershell
+# 启动后打开接口文档，展开 POST /api/notes 点 Try it out
+http://127.0.0.1:8000/docs
+```
+
+| 接口 | 作用 |
+|---|---|
+| `POST /api/notes` | 写一条备忘，返回它在库里的 `id` |
+| `GET /api/notes` | 按时间倒序读出最近 20 条 |
+| `GET /api/notes/stats` | 一共几条 + 数据库文件在哪 |
+
+验证「真的存进文件了」：写一条 → 关掉 uvicorn → 重新启动 → 再 `GET /api/notes`，那条还在。
+
+代码在 `server/app/db.py`：`init_db()` 建表（`CREATE TABLE IF NOT EXISTS`），每次请求开一个连接、用完就关。
+
+> ⚠️ 部署到 Vercel 时这个文件是**临时的**，实例回收后数据会丢。等接真实业务表时换 Neon Postgres（`DATABASE_URL`），接口和表结构基本不用改。
+
+## 六、serverless 的四个坑（先记住，写代码时会撞上）
 
 1. **没有常驻内存**：函数每次冷启动都是新进程，别把任务放内存队列，要用数据库或外部队列
 2. **单次请求最长 60s**（本项目配置），AI 长任务要改成「提交任务 → 轮询/SSE 取结果」

@@ -1,2 +1,6 @@
-.vercel
+﻿.vercel
 .env*
+.venv
+data.db
+.uvicorn*.log
+__pycache__
