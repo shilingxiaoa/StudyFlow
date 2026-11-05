@@ -8,3 +8,10 @@ release/
 data/*.db
 data/*.db.bak
 *.tsbuildinfo
+
+# server (python)
+server/.venv/
+server/.env
+server/__pycache__/
+**/__pycache__/
+*.pyc
