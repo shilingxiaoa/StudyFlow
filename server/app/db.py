@@ -29,6 +29,13 @@ CREATE TABLE IF NOT EXISTS notes (
     text       TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS users (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    email         TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at    TEXT NOT NULL
+);
 """
 
 
@@ -75,4 +82,45 @@ def list_notes(limit: int = 20) -> list[dict[str, object]]:
 def count_notes() -> int:
     with get_conn() as conn:
         row = conn.execute("SELECT COUNT(*) AS n FROM notes").fetchone()
+    return int(row["n"])
+
+
+# ------------------------------------------------------------------- 用户
+def create_user(email: str, password_hash: str) -> dict[str, object]:
+    """插入一个用户；邮箱重复时抛 sqlite3.IntegrityError，由调用方翻译成业务错误。"""
+    created_at = _now()
+    with get_conn() as conn:
+        cur = conn.execute(
+            "INSERT INTO users (email, password_hash, created_at) VALUES (?, ?, ?)",
+            (email, password_hash, created_at),
+        )
+        return {
+            "id": cur.lastrowid,
+            "email": email,
+            "password_hash": password_hash,
+            "created_at": created_at,
+        }
+
+
+def get_user_by_email(email: str) -> dict[str, object] | None:
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT id, email, password_hash, created_at FROM users WHERE email = ?",
+            (email,),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def get_user_by_id(user_id: int) -> dict[str, object] | None:
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT id, email, password_hash, created_at FROM users WHERE id = ?",
+            (user_id,),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def count_users() -> int:
+    with get_conn() as conn:
+        row = conn.execute("SELECT COUNT(*) AS n FROM users").fetchone()
     return int(row["n"])

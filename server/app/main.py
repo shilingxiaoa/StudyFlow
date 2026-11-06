@@ -1,8 +1,7 @@
-"""StudyFlow API —— 第一、二步：API 骨架 + SQLite 存储。
+"""StudyFlow API —— 第一到三步：API 骨架 + SQLite + 账号。
 
-已完成：健康检查、回声、信息接口（证明服务能起来）。
-本步新增：notes 表 —— 演示「接口 + 数据库」的最小闭环（写进去、读出来、重启还在）。
-下一步会在这里加：账号登录、数据同步、AI 网关。
+已完成：健康检查、回声、信息接口；notes 表（读写闭环）；注册 / 登录 / 查自己（JWT）。
+下一步会在这里加：数据同步、AI 网关。
 """
 
 from __future__ import annotations
@@ -18,9 +17,9 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from . import db
+from . import auth, db
 
-APP_VERSION = "0.2.0"
+APP_VERSION = "0.3.0"
 
 
 @asynccontextmanager
@@ -37,6 +36,9 @@ app = FastAPI(
     description="StudyFlow 的服务端：先跑通链路，再逐步加账号 / 同步 / AI 网关。",
     lifespan=lifespan,
 )
+
+# 账号相关的三个接口（/api/auth/register、/login、/me）
+app.include_router(auth.router)
 
 # 桌面客户端（Electron 的 file:// 或 http://localhost）需要跨域访问。
 # 生产环境记得把 ALLOW_ORIGINS 收窄成你自己的域名。
