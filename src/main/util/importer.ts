@@ -1,8 +1,9 @@
 /**
  * 学习资料导入：把本地文件读成纯文本，存进 material 表，供生成计划 / 出题时参考。
  *
- * 支持：.md / .markdown / .txt（直接读 UTF-8）、.docx（解 zip 取 word/document.xml 的文本）。
- * 不支持：.doc（老二进制格式）、PDF、图片、网页。遇到不支持的格式返回可读原因，不抛给渲染层。
+ * 支持：.md / .markdown / .txt（直接读 UTF-8）、.docx（解 zip 取 word/document.xml）、
+ *       .pptx（解 zip 取 ppt/slides/slideN.xml，逐页抽文字，带上备注）。
+ * 不支持：.doc / .ppt（老二进制格式）、PDF、图片、网页。
  */
 import { readFileSync, statSync } from 'node:fs'
 import { basename, extname } from 'node:path'
@@ -18,6 +19,7 @@ export const MAX_TEXT_CHARS = 200_000
 
 const TEXT_EXTS = new Set(['.md', '.markdown', '.txt'])
 const DOCX_EXTS = new Set(['.docx'])
+const PPTX_EXTS = new Set(['.pptx'])
 
 export interface ParsedDocument {
   /** 文件名去掉扩展名，作为资料标题 */
@@ -29,7 +31,7 @@ export interface ParsedDocument {
 
 export function isSupportedDocument(filePath: string): boolean {
   const ext = extname(filePath).toLowerCase()
-  return TEXT_EXTS.has(ext) || DOCX_EXTS.has(ext)
+  return TEXT_EXTS.has(ext) || DOCX_EXTS.has(ext) || PPTX_EXTS.has(ext)
 }
 
 function decodeXmlEntities(text: string): string {
@@ -74,6 +76,24 @@ export function docxXmlToText(xml: string): string {
   return lines.join('\n')
 }
 
+/** 把单张幻灯片 XML 转成文本：每个 <a:p> 一段，段内拼 <a:t>，<a:br/> 当换行 */
+export function slideXmlToText(xml: string): string {
+  const paragraphs = xml.split(/<\/a:p>/i)
+  const lines: string[] = []
+  for (const paragraph of paragraphs) {
+    const pieces: string[] = []
+    const tokenPattern = /<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>|<a:br\s*\/>/gi
+    let match: RegExpExecArray | null
+    while ((match = tokenPattern.exec(paragraph)) !== null) {
+      if (match[1] !== undefined) pieces.push(decodeXmlEntities(match[1]))
+      else pieces.push('\n')
+    }
+    const line = pieces.join('').replace(/[ \t]+$/g, '')
+    if (line.trim() !== '') lines.push(line)
+  }
+  return lines.join('\n')
+}
+
 /** Markdown → 纯文本：去掉 YAML frontmatter、图片语法与行尾空白，压缩空行 */
 export function markdownToText(raw: string): string {
   let text = raw.replace(/\r\n?/g, '\n')
@@ -96,6 +116,42 @@ function truncate(text: string): string {
   return `${text.slice(0, MAX_TEXT_CHARS)}\n\n（内容过长，已截断到 ${MAX_TEXT_CHARS} 字）`
 }
 
+/**
+ * 解 .pptx 的 zip：找 ppt/slides/slideN.xml（按页码排序），逐页抽文字，
+ * 有备注页（ppt/notesSlides/notesSlideN.xml）就一起带上 —— 讲稿往往比幻灯片本身更有信息。
+ */
+export async function pptxToText(buffer: Buffer, fileName: string): Promise<string> {
+  const zip = await JSZip.loadAsync(buffer)
+
+  const slides = Object.keys(zip.files)
+    .map((name) => {
+      const matched = /^ppt\/slides\/slide(\d+)\.xml$/i.exec(name)
+      return matched ? { name, index: Number(matched[1]) } : null
+    })
+    .filter((item): item is { name: string; index: number } => item !== null)
+    .sort((a, b) => a.index - b.index)
+
+  if (slides.length === 0) {
+    throw new AppError('VALIDATION', `${fileName} 里没有找到幻灯片（可能不是 PowerPoint 文件）`)
+  }
+
+  const pages: string[] = []
+  for (const slide of slides) {
+    const entry = zip.file(slide.name)
+    if (!entry) continue
+    const text = slideXmlToText(await entry.async('string'))
+
+    const notesEntry = zip.file(`ppt/notesSlides/notesSlide${slide.index}.xml`)
+    const notes = notesEntry ? slideXmlToText(await notesEntry.async('string')) : ''
+
+    if (text.trim() === '' && notes.trim() === '') continue
+    const notesBlock = notes.trim() === '' ? '' : `\n\n【备注】\n${notes}`
+    pages.push(`## 第 ${slide.index} 页\n${text}${notesBlock}`)
+  }
+
+  return pages.join('\n\n')
+}
+
 /** 读一个文件并解析成资料内容；失败抛 AppError（带可读中文原因） */
 export async function parseDocument(filePath: string): Promise<ParsedDocument> {
   const title = basename(filePath, extname(filePath)).trim() || '未命名资料'
@@ -104,7 +160,7 @@ export async function parseDocument(filePath: string): Promise<ParsedDocument> {
   if (!isSupportedDocument(filePath)) {
     throw new AppError(
       'VALIDATION',
-      `不支持 ${ext || '这种'} 格式，只能导入 .md / .markdown / .txt / .docx`
+      `不支持 ${ext || '这种'} 格式，只能导入 .md / .markdown / .txt / .docx / .pptx`
     )
   }
 
@@ -138,6 +194,14 @@ export async function parseDocument(filePath: string): Promise<ParsedDocument> {
     const content = truncate(docxXmlToText(xml))
     if (content.trim() === '') {
       throw new AppError('VALIDATION', `${basename(filePath)} 里没有可读文字（可能是纯图片文档）`)
+    }
+    return { title, content, kind: 'chapter' }
+  }
+
+  if (PPTX_EXTS.has(ext)) {
+    const content = truncate(await pptxToText(buffer, basename(filePath)))
+    if (content.trim() === '') {
+      throw new AppError('VALIDATION', `${basename(filePath)} 里没有可读文字（可能整份都是图片）`)
     }
     return { title, content, kind: 'chapter' }
   }

@@ -79,29 +79,35 @@
     })
     goalId = goal.id
 
-    // 1.5 资料导入：md 与 docx 各一份，验证解析 + 入库 + 列表
+    // 1.5 资料导入：md / docx / pptx 各一份，验证解析 + 入库 + 列表
     const imported = await must('material:import', 'material:import', {
       goalId,
-      paths: ['.tmp-fixtures/kana.md', '.tmp-fixtures/sample.docx']
+      paths: ['.tmp-fixtures/kana.md', '.tmp-fixtures/sample.docx', '.tmp-fixtures/lecture.pptx']
     })
-    record('资料导入 2 份', imported.imported === 2 && imported.skipped.length === 0, {
+    record('资料导入 3 份', imported.imported === 3 && imported.skipped.length === 0, {
       imported: imported.imported,
       skipped: imported.skipped
     })
     const materials = await must('material:list', 'material:list', { goalId })
     const md = materials.find((m) => m.title === 'kana')
     const docx = materials.find((m) => m.title === 'sample')
+    const pptx = materials.find((m) => m.title === 'lecture')
     record(
       '资料解析出正文',
-      materials.length === 2 &&
+      materials.length === 3 &&
         Boolean(md) &&
         Boolean(docx) &&
+        Boolean(pptx) &&
         Boolean(md.content.includes('# 第一章')) &&
-        Boolean(docx.content.includes('第一段正文')),
+        Boolean(docx.content.includes('第一段正文')) &&
+        Boolean(pptx.content.includes('课堂 PPT 第一页标题')) &&
+        Boolean(pptx.content.includes('【备注】')) &&
+        Boolean(pptx.content.includes('## 第 2 页')),
       {
         titles: materials.map((m) => m.title),
         mdChars: md ? md.content.length : 0,
-        docxChars: docx ? docx.content.length : 0
+        docxChars: docx ? docx.content.length : 0,
+        pptxChars: pptx ? pptx.content.length : 0
       }
     )
     const rejected = await must('material:import 拒收 pdf', 'material:import', {

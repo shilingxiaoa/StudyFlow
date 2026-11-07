@@ -282,7 +282,8 @@ export function registerDbHandlers(): void {
   })
 
   /**
-   * 弹系统文件框选 .md/.txt/.docx → 解析成纯文本 → 逐份入库。
+   * 弹系统文件框选 .md/.txt/.docx/.pptx → 解析成纯文本 → 逐份入库。
+   * .pptx 会连同「备注」一起抽出来（讲稿通常比幻灯片本身信息更多）。
    * 也接受显式 paths（自动化测试用），否则一律走系统对话框，渲染进程拿不到任意路径读取能力。
    */
   handle<unknown, MaterialImportResult>(IPC.MATERIAL_IMPORT, async (payload) => {
@@ -301,7 +302,10 @@ export function registerDbHandlers(): void {
         buttonLabel: '导入',
         properties: ['openFile', 'multiSelections'],
         filters: [
-          { name: 'Markdown / 文本 / Word', extensions: ['md', 'markdown', 'txt', 'docx'] },
+          {
+            name: '学习资料（Markdown / 文本 / Word / PowerPoint）',
+            extensions: ['md', 'markdown', 'txt', 'docx', 'pptx']
+          },
           { name: '全部文件', extensions: ['*'] }
         ]
       })

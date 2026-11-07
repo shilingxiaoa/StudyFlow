@@ -64,15 +64,29 @@ function createWindow(): void {
         mkdirSync(shotsDir, { recursive: true })
         setTimeout(() => {
           // 等一屏再截：console.log 到合成器出帧之间常有一屏延迟，否则会拍上一个页面。
-          // 这里刻意不用 requestAnimationFrame（窗口被遮挡时 rAF 会被节流甚至不触发）。
-          void win.webContents
-            .capturePage()
+          // 先等两个 rAF（最多 600ms 兜底），确认渲染层确实画完新帧，再抓图。
+          const settle = win.webContents
+            .executeJavaScript(
+              `new Promise((resolve) => {
+                 let frames = 0
+                 const tick = () => {
+                   frames += 1
+                   if (frames >= 2) return resolve(true)
+                   requestAnimationFrame(tick)
+                 }
+                 requestAnimationFrame(tick)
+                 setTimeout(() => resolve(false), 600)
+               })`
+            )
+            .catch(() => false)
+          void settle
+            .then(() => win.webContents.capturePage())
             .then((image) => {
               writeFileSync(join(shotsDir, `${label}.png`), image.toPNG())
               console.log(`[smoke] 已截图 ${label}`)
             })
             .catch((error) => console.error('[smoke] 截图失败', error))
-        }, 1500)
+        }, 1200)
       }
     })
     win.webContents.on('did-fail-load', (_event, code, desc) => {

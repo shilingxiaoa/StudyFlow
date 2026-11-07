@@ -9,7 +9,7 @@ import { useAppStore } from '../store/app'
 import './layout.css'
 
 /** 与 package.json 的 version 保持一致（渲染层不读 package.json，避免把依赖清单打进包） */
-const APP_VERSION = '1.5.0'
+const APP_VERSION = '1.6.0'
 
 function IconDashboard(): JSX.Element {
   return (

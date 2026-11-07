@@ -157,7 +157,7 @@ export default function PlanNew(): JSX.Element {
     )
   }
 
-  // ───────── 学习资料（.md / .txt / .docx 导入） ─────────
+  // ───────── 学习资料（.md / .txt / .docx / .pptx 导入） ─────────
   const loadMaterials = useCallback(async (): Promise<void> => {
     if (goalId === '') return
     try {
@@ -294,7 +294,7 @@ export default function PlanNew(): JSX.Element {
       {phase === 'idle' ? (
         <Card
           title="学习资料（可选）"
-          subtitle="导入教材 / 笔记原文，生成计划时 AI 会参考（最多 3 份、每份前 5000 字）。"
+          subtitle="导入讲义原文（.md / .txt / .docx / .pptx），生成计划、备课与出题时 AI 会参考（最多 3 份、每份前 5000 字）。"
           actions={
             <Button
               variant={materials.length === 0 ? 'primary' : 'ghost'}
@@ -308,7 +308,7 @@ export default function PlanNew(): JSX.Element {
         >
           {materials.length === 0 ? (
             <div className="sf-plan__mats-empty">
-              <p>支持 .md / .markdown / .txt / .docx，一次最多 20 份，单份不超过 8MB。</p>
+              <p>支持 .md / .markdown / .txt / .docx / .pptx（课堂 PPT 会连备注一起读），一次最多 20 份，单份不超过 8MB。</p>
               <p className="sf-faint">不导入也能生成：没有资料时 AI 按目标本身的常识拆解。</p>
             </div>
           ) : (
