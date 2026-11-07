@@ -8,8 +8,8 @@ import { Link, useRoute } from '../lib/router'
 import { useAppStore } from '../store/app'
 import './layout.css'
 
-/** 与 package.json 的 version 保持一致（渲染层不读 package.json，避免把依赖清单打进包） */
-const APP_VERSION = '1.7.0'
+/** 版本号由 electron.vite.config.ts 在构建时从 package.json 注入（__APP_VERSION__） */
+const APP_VERSION = typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : 'dev'
 
 function IconDashboard(): JSX.Element {
   return (

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>StudyFlow · AI 监督式学习进度</title>
+    <meta name="description" content="StudyFlow —— 把学习目标拆成每天能照着做的任务，AI 出题验收，通过才增长进度。Windows 桌面应用，数据只存本机。" />
+    <style>
+      :root {
+        --bg: #0e1116;
+        --surface: #161b23;
+        --border: #232a35;
+        --text: #e6eaf0;
+        --muted: #8a93a6;
+        --accent: #5b8cff;
+        --success: #3ecf8e;
+        --radius: 14px;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(900px 520px at 18% -10%, #1b2a4a 0%, transparent 60%),
+          var(--bg);
+        color: var(--text);
+        font: 16px/1.7 "Microsoft YaHei", "PingFang SC", system-ui, -apple-system, sans-serif;
+        display: flex;
+        justify-content: center;
+        padding: 56px 20px 80px;
+      }
+      main { width: min(760px, 100%); }
+      .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+      .logo {
+        width: 44px; height: 44px; border-radius: 12px;
+        background: linear-gradient(140deg, #5b8cff, #3f6fe0);
+        display: grid; place-items: center; font-weight: 700; font-size: 20px;
+        box-shadow: 0 8px 30px rgba(91, 140, 255, 0.35);
+      }
+      h1 { font-size: 30px; margin: 0 0 8px; letter-spacing: 0.5px; }
+      .lead { color: var(--muted); margin: 0 0 30px; }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 22px 22px 24px;
+        margin-bottom: 18px;
+      }
+      .card h2 { font-size: 16px; margin: 0 0 12px; color: var(--text); }
+      .version {
+        display: inline-block; font-size: 12px; color: var(--muted);
+        border: 1px solid var(--border); border-radius: 999px;
+        padding: 2px 10px; margin-left: 8px; vertical-align: 2px;
+      }
+      .downloads { display: grid; gap: 12px; }
+      @media (min-width: 620px) { .downloads { grid-template-columns: 1fr 1fr; } }
+      a.btn {
+        display: block; text-align: center; text-decoration: none;
+        padding: 14px 18px; border-radius: 10px;
+        border: 1px solid var(--border); color: var(--text);
+        transition: transform 0.15s ease, border-color 0.15s ease;
+      }
+      a.btn:hover { transform: translateY(-1px); border-color: var(--accent); }
+      a.btn.primary {
+        background: var(--accent); border-color: var(--accent);
+        color: #0b1020; font-weight: 700;
+      }
+      a.btn small { display: block; font-weight: 400; font-size: 12px; color: inherit; opacity: 0.8; }
+      ul { margin: 0; padding-left: 20px; color: var(--muted); }
+      li { margin: 6px 0; }
+      code {
+        background: #0b0f15; border: 1px solid var(--border);
+        border-radius: 6px; padding: 1px 6px; font-size: 13px; color: #b9c6dd;
+      }
+      footer { color: #5b6478; font-size: 13px; margin-top: 26px; text-align: center; }
+      .tag { color: var(--success); }
+      a { color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="brand">
+        <div class="logo">S</div>
+        <div>
+          <strong>StudyFlow</strong>
+          <div class="lead" style="margin: 0; font-size: 13px">AI 监督式学习进度 · Windows 桌面应用</div>
+        </div>
+      </div>
+
+      <h1>让进度条只为「真的学会」增长</h1>
+      <p class="lead">
+        设定学习目标，AI 拆成每天能照着做的任务；点「让 AI 备课」拿到当天讲义；做完打勾后参加检测——
+        7 道单选 + 2 轮问答，80 分才算通过。数据只存在你自己的电脑上。
+      </p>
+
+      <div class="card">
+        <h2>下载<span class="version">__VERSION__</span></h2>
+        <div class="downloads">
+          <a class="btn primary" href="https://github.com/shilingxiaoa/StudyFlow/releases/latest">
+            安装版（推荐）
+            <small>NSIS 安装包 · 约 127 MB</small>
+          </a>
+          <a class="btn" href="https://github.com/shilingxiaoa/StudyFlow/releases/latest">
+            便携版
+            <small>双击即用 · 约 111 MB</small>
+          </a>
+        </div>
+        <p class="lead" style="margin: 14px 0 0; font-size: 13px">
+          两个包都在 <a href="https://github.com/shilingxiaoa/StudyFlow/releases">Releases</a> 页面。
+          没有代码签名，Windows 可能提示「未知发布者」，选择「仍要运行」即可。
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>第一次使用</h2>
+        <ul>
+          <li>创建本地账号（不联网，忘记密码无法找回）</li>
+          <li>在「设置」里填自己的 DeepSeek API Key，Key 用系统加密存在本机</li>
+          <li>新建目标 → AI 生成计划 → 进 Day 点「让 AI 备课」</li>
+          <li>勾任务、直接检测、看进度条涨起来</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>从源码构建</h2>
+        <ul>
+          <li><code>git clone https://github.com/shilingxiaoa/StudyFlow.git</code></li>
+          <li><code>npm install</code> → <code>npm run dev</code></li>
+          <li>打包：<code>npm run dist</code>（产出在 <code>release/</code>）</li>
+        </ul>
+      </div>
+
+      <footer>
+        <span class="tag">●</span> 本地优先 · 只接 DeepSeek ·
+        <a href="https://github.com/shilingxiaoa/StudyFlow/blob/main/CHANGELOG.md">更新日志</a> ·
+        <a href="https://github.com/shilingxiaoa/StudyFlow">源码</a>
+      </footer>
+    </main>
+  </body>
+</html>

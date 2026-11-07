@@ -388,6 +388,19 @@ export interface LessonAskResult {
   answer: string;
 }
 
+// ───────────────────────────── 更新（自动更新） ─────────────────────────────
+
+/** 自动更新状态机；主进程通过 push:updateStatus 推送 */
+export interface UpdateStatus {
+  state: 'idle' | 'checking' | 'not-available' | 'available' | 'downloading' | 'ready' | 'error';
+  /** 可更新到 / 正在下载的版本号 */
+  version: string | null;
+  /** 下载进度 0–100 */
+  percent: number | null;
+  /** 给用户看的一句话 */
+  message: string | null;
+}
+
 // ───────────────────────────── 设置 / 统计 ─────────────────────────────
 
 export interface AppSettings {
@@ -519,6 +532,12 @@ export const IPC = {
 
   STATS_OVERVIEW: 'stats:overview',
   EXPORT_MARKDOWN: 'export:markdown',
+
+  APP_INFO: 'app:info',
+  UPDATE_STATUS_REQ: 'update:status',
+  UPDATE_CHECK: 'update:check',
+  UPDATE_DOWNLOAD: 'update:download',
+  UPDATE_INSTALL: 'update:install',
 } as const;
 
 export type IpcChannel = (typeof IPC)[keyof typeof IPC];
@@ -531,6 +550,8 @@ export const PUSH = {
   AI_STAGE: 'push:aiStage',
   /** 登录状态变了（登录 / 退出 / 改密码后重新建会话）；payload 是 AuthStatus */
   AUTH_CHANGED: 'push:authChanged',
+  /** 自动更新状态变化；payload 是 UpdateStatus */
+  UPDATE_STATUS: 'push:updateStatus',
 } as const;
 
 export interface AiStage {
@@ -540,6 +561,14 @@ export interface AiStage {
 }
 
 // ───────────────────────────── Preload 暴露面 ─────────────────────────────
+
+/** app:info 的返回：给设置页「关于」用 */
+export interface AppInfo {
+  version: string;
+  packaged: boolean;
+  platform: string;
+  electron: string;
+}
 
 /** 渲染进程可用的 window.api（由 preload 实现） */
 export interface RendererApi {

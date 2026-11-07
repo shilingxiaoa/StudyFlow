@@ -1,0 +1,42 @@
+name: Release
+
+# 推 tag（v*）自动构建 Windows 安装包并上传到对应 Release
+# 手动也可以在 Actions 页面点 Run workflow（会构建但不发版，除非 tag 已存在）
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: 安装依赖
+        run: npm ci
+        env:
+          ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
+
+      - name: 静态检查（双 tsc + schema-lint）
+        run: npm run verify
+
+      - name: 构建渲染层与主进程
+        run: npm run build
+
+      - name: 打包并上传 Release 附件
+        run: npx electron-builder --win --publish always
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
+          ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/

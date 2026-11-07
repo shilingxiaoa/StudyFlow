@@ -5,8 +5,8 @@
    ============================================================ */
 import { useEffect, useState } from 'react'
 import type { FormEvent, JSX } from 'react'
-import type { AppSettings, AuthStatus } from '@shared/contracts'
-import { IPC } from '@shared/contracts'
+import type { AppInfo, AppSettings, AuthStatus, UpdateStatus } from '@shared/contracts'
+import { IPC, PUSH } from '@shared/contracts'
 import { Page } from '../components/layout'
 import {
   Badge,
@@ -17,7 +17,7 @@ import {
   Select,
   useToast
 } from '../components/ui'
-import { call, errorMessage } from '../lib/api'
+import { call, errorMessage, onPush } from '../lib/api'
 import { formatDate, formatMinutes, formatPercent } from '../lib/format'
 import { navigate } from '../lib/router'
 import { useAppStore } from '../store/app'
@@ -81,6 +81,58 @@ export default function Settings(): JSX.Element {
   const logout = useAppStore((state) => state.logout)
   const refreshAuth = useAppStore((state) => state.refreshAuth)
   const account = auth?.account ?? null
+
+  // ---- 关于与更新 ----
+  const [appInfo, setAppInfo] = useState<AppInfo | null>(null)
+  const [upd, setUpd] = useState<UpdateStatus>({
+    state: 'idle',
+    version: null,
+    percent: null,
+    message: null,
+  })
+  const [updBusy, setUpdBusy] = useState(false)
+
+  // 应用信息 + 更新状态（进设置页就看一眼，可能在后台已经检查过）
+  useEffect(() => {
+    let alive = true
+    void call<AppInfo>(IPC.APP_INFO)
+      .then((info) => {
+        if (alive) setAppInfo(info)
+      })
+      .catch(() => undefined)
+    void call<UpdateStatus>(IPC.UPDATE_STATUS_REQ)
+      .then((status) => {
+        if (alive) setUpd(status)
+      })
+      .catch(() => undefined)
+    const off = onPush(PUSH.UPDATE_STATUS, (payload) => setUpd(payload as UpdateStatus))
+    return () => {
+      alive = false
+      off()
+    }
+  }, [])
+
+  async function runUpdate(kind: 'check' | 'download' | 'install'): Promise<void> {
+    if (updBusy) return
+    setUpdBusy(true)
+    try {
+      if (kind === 'check') {
+        const next = await call<UpdateStatus>(IPC.UPDATE_CHECK)
+        setUpd(next)
+        if (next.state === 'not-available') success(next.message ?? '已经是最新版本')
+        else if (next.state === 'available') success(next.message ?? '发现新版本')
+      } else if (kind === 'download') {
+        const next = await call<UpdateStatus>(IPC.UPDATE_DOWNLOAD)
+        setUpd(next)
+      } else {
+        await call<UpdateStatus>(IPC.UPDATE_INSTALL)
+      }
+    } catch (err) {
+      danger(errorMessage(err))
+    } finally {
+      setUpdBusy(false)
+    }
+  }
 
   // ---- API ----
   const [keyDraft, setKeyDraft] = useState('')
@@ -650,8 +702,7 @@ export default function Settings(): JSX.Element {
       </Card>
 
       {/* ---------- 数据管理 ---------- */}
-      <Card title="数据管理" subtitle="所有数据都保存在本机，删除后无法恢复。">
-        <div className="sf-settings__rows">
+      <Card title="数据管理" subtitle="所有数据都保存在本机，删除后无法恢复。">        <div className="sf-settings__rows">
           <div className="sf-settings__row">
             <div className="sf-settings__row-text">
               <span className="sf-settings__row-title">数据库位置</span>
@@ -694,6 +745,50 @@ export default function Settings(): JSX.Element {
             >
               删除计划
             </Button>
+          </div>
+        </div>
+      </Card>
+
+      <Card
+        title="关于与更新"
+        subtitle="当前版本、检查更新、运行环境。"
+        actions={
+          <Badge tone={upd.state === 'ready' ? 'success' : upd.state === 'available' ? 'warn' : 'neutral'}>
+            {updBusy ? '处理中…' : (upd.message ?? `v${appInfo?.version ?? '—'}`)}
+          </Badge>
+        }
+      >
+        <div className="sf-settings__rows">
+          <div className="sf-settings__row">
+            <div className="sf-settings__row-text">
+              <span className="sf-settings__row-title">StudyFlow v{appInfo?.version ?? '—'}</span>
+              <span className="sf-settings__row-desc">
+                {appInfo?.packaged ? '安装版' : '开发版（源码运行）'}
+                {appInfo ? ` · Electron ${appInfo.electron} · ${appInfo.platform}` : ''}
+              </span>
+            </div>
+            {upd.state === 'available' ? (
+              <Button size="sm" loading={updBusy} onClick={() => void runUpdate('download')}>
+                下载 v{upd.version}
+              </Button>
+            ) : upd.state === 'ready' ? (
+              <Button size="sm" variant="primary" loading={updBusy} onClick={() => void runUpdate('install')}>
+                重启并安装 v{upd.version}
+              </Button>
+            ) : (
+              <Button size="sm" loading={updBusy} onClick={() => void runUpdate('check')}>
+                检查更新
+              </Button>
+            )}
+          </div>
+          <div className="sf-settings__row">
+            <div className="sf-settings__row-text">
+              <span className="sf-settings__row-title">更新说明</span>
+              <span className="sf-settings__row-desc">
+                启动后会自动检查一次；新版本会提示，不会自动替换正在用的版本。
+                {upd.state === 'downloading' ? ` 正在下载 ${upd.percent ?? 0}%` : ''}
+              </span>
+            </div>
           </div>
         </div>
       </Card>

@@ -3,6 +3,9 @@
 import type { RendererApi } from '@shared/contracts'
 
 declare global {
+  /** electron.vite.config.ts 在构建时注入的 package.json 版本号 */
+  const __APP_VERSION__: string
+
   interface Window {
     /**
      * preload 通过 contextBridge 暴露的唯一 IPC 面。

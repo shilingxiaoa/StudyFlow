@@ -3,6 +3,16 @@
 本项目的版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)：`主版本.次版本.修订号`。
 桌面应用对外发版时打 tag（`v1.0.0` 这类），安装包与 tag 一一对应。
 
+## [1.8.0] — 2026-11-08
+
+**自动更新上线（P1）**
+
+- 接入 `electron-updater`：启动 6 秒后静默检查一次更新，发现新版本只提示、不自动覆盖正在用的版本。
+- 设置页新增「关于与更新」：显示真实版本号（构建时注入）、安装版/开发版、Electron 版本，提供「检查更新 / 下载 / 重启并安装」。
+- 打包配置加上 `publish: github`，`npm run dist` 会同时产出 `latest.yml`（更新清单）。
+- 版本号不再手写在渲染层：由 `electron.vite.config.ts` 从 `package.json` 注入 `__APP_VERSION__`。
+- 新增 GitHub Actions：推 tag 自动构建并上传 Release 附件；`site/` 目录下的下载页可随 Pages 一起发布。
+
 ## [1.7.0] — 2026-11-07
 
 **资料不限份数，计划与目标可编辑**

@@ -3,6 +3,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { registerIpcHandlers } from './ipc/register'
 import { prepareAuth } from './auth/service'
+import { setupUpdater } from './updater'
 
 /**
  * 测试隔离：SF_USER_DATA=<目录> 时把数据目录整体挪走。
@@ -140,6 +141,8 @@ app.whenReady().then(async () => {
   }
   registerIpcHandlers()
   createWindow()
+  // 打包版启动后静默检查一次更新（开发模式内部直接跳过）
+  setupUpdater()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })

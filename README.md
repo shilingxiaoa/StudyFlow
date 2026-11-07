@@ -12,6 +12,7 @@
 - 账号：本地账号 + 密码登录（只存本机，不联网），每个账号独立数据，退出不删数据
 - 资料：可以把 .md / .txt / .docx / .pptx（课堂 PPT，连讲稿备注一起读）教材导进来，生成计划、备课与出题时 AI 会参考原文（份数不限，每份取前 1 万字）
 - 多目标：可以同时学多个目标，每个目标有各自的计划、进度、教案和统计，看板顶部一键切换；同一个目标也能存多份计划（旧的自动归档，数据保留）
+- 更新：启动后自动检查新版本，设置页里可以手动检查、下载、重启安装（更新源是 GitHub Releases）
 
 > 设计文档：`docs/01-产品设计.md`、`docs/02-技术设计.md`、`docs/03-DeepSeek-API-备忘.md`、`docs/04-技术方案.md`、`docs/05-上线路线图.md`（v2 计划：打包/分发/账号同步/AI 网关/商业化）
 
@@ -55,6 +56,13 @@ npm run dist     # → release/StudyFlow-<版本>-setup.exe（NSIS 安装版）+
 
 - 安装版默认**当前用户安装**（不需要管理员），装到 `%LOCALAPPDATA%\Programs\StudyFlow`，自动建桌面与开始菜单快捷方式；卸载默认**保留数据**（`deleteAppDataOnUninstall: false`）。
 - 安装包目前**没有代码签名**，Windows 首次运行会弹 SmartScreen「未知发布者」，点「更多信息 → 仍要运行」即可；正式对外分发前需要买证书做签名（见 `docs/05-上线路线图.md` T1.5）。
+
+### 发布与自动更新
+
+- **自动构建**：推一个 `v*` tag 就会触发 `.github/workflows/release.yml`（Windows runner），自动跑 `npm run verify` → 构建 → `electron-builder --publish always`，把安装版、便携版、`latest.yml` 一起传到对应 Release。不需要本地手动上传。
+- **自动更新**：应用启动 6 秒后静默检查一次（`electron-updater`，`autoDownload=false`）；有新版只在「设置 → 关于与更新」里提示，用户点「下载」再点「重启并安装」，不会偷偷替换正在用的版本。更新源是 GitHub Releases（`package.json` 的 `build.publish`）。
+- **下载页**：`site/index.html` 是一个纯静态落地页（版本号由 workflow 注入），启用 GitHub Pages（Source 选 *GitHub Actions*）后推 `main` 即自动发布。
+- 发版流程：改 `package.json` 版本号 → 写 `CHANGELOG.md` → 提交 → `git tag vX.Y.Z` → `git push origin main --tags`。
 - 打包依赖的 electron / electron-builder 二进制都走国内镜像（`scripts/dist.mjs` 里已设好环境变量），否则本机直连 GitHub 会超时。
 
 首次启动会进入引导页，要求填写 **DeepSeek API Key**（[platform.deepseek.com](https://platform.deepseek.com) 获取）。Key 只在本机加密保存，没有 Key 时建目标、存计划、勾任务、统计、导出都能正常用，只有 AI 出题/评分会返回 `NO_API_KEY`。
@@ -112,11 +120,14 @@ scripts/
 ├─ smoke-flow.js            # 注入渲染进程的链路脚本（82 项断言）
 ├─ shots-flow.js            # 造演示数据 + 逐页打点截图
 ├─ shots-lesson.js          # 用已备好课的库拍教案截图
+├─ dist.mjs                 # 打包入口（设镜像、清 ELECTRON_RUN_AS_NODE）
 └─ fixtures.mjs             # 生成导入测试素材（.md / .docx / .pptx / .pdf）
-docs/                       # 产品 / 技术 / API / 方案四份设计文档
+site/                       # GitHub Pages 下载落地页（自动注入版本号）
+.github/workflows/          # release.yml（推 tag 自动打包上传）/ pages.yml（发布下载页）
+docs/                       # 产品 / 技术 / API / 方案 / 上线路线图 / 发版检查表
 ```
 
-数据位置：`%APPDATA%\StudyFlow\studyflow.db`（导出文件在 `exports/`）。
+数据位置：`%APPDATA%\StudyFlow\`（账号库 `accounts.db`、每个账号的学习库 `users/<id>/studyflow.db`、导出文件在 `exports/`）。
 
 ---
 

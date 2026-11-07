@@ -1,7 +1,7 @@
 {
   "name": "study-flow",
   "productName": "StudyFlow",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "AI 监督式学习进度桌面应用（DeepSeek 驱动）",
   "author": {
     "name": "shilingxiaoa",
@@ -41,11 +41,15 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },
@@ -61,10 +65,18 @@
     },
     "portable": {
       "artifactName": "StudyFlow-${version}-portable.${ext}"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "shilingxiaoa",
+        "repo": "StudyFlow"
+      }
+    ]
   },
   "dependencies": {
     "dayjs": "^1.11.23",
+    "electron-updater": "^6.8.11",
     "jszip": "^3.10.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
