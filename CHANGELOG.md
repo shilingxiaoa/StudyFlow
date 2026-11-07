@@ -3,6 +3,12 @@
 本项目的版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)：`主版本.次版本.修订号`。
 桌面应用对外发版时打 tag（`v1.0.0` 这类），安装包与 tag 一一对应。
 
+## [1.8.1] — 2026-11-08
+
+**修复：CI 发布的是草稿 Release，自动更新找不到**
+
+- `build.publish` 增加 `releaseType: "release"`，CI 推 tag 后直接发布正式 Release（不再是 draft），`electron-updater` 才能读到 `latest.yml`。
+
 ## [1.8.0] — 2026-11-08
 
 **自动更新上线（P1）**
