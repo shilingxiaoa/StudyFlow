@@ -20,6 +20,14 @@ function clip(text: string, max: number): string {
   return value.length > max ? `${value.slice(0, max)}…` : value
 }
 
+/** 每份参考资料送进 prompt 的字数上限（用户要求：单次不超过 1 万字） */
+export const MATERIAL_CLIP_CHARS = 10_000
+
+/** 计划默认天数与可选范围 */
+export const PLAN_DEFAULT_DAYS = 30
+export const PLAN_MIN_DAYS = 1
+export const PLAN_MAX_DAYS = 120
+
 // ───────────────────────────── 1. 生成计划 ─────────────────────────────
 
 export interface PlanPromptInput {
@@ -27,13 +35,15 @@ export interface PlanPromptInput {
   materials: readonly Pick<Material, 'title' | 'content'>[]
 }
 
-export function buildPlanSystem(): string {
+export function buildPlanSystem(desiredDays: number = PLAN_DEFAULT_DAYS): string {
+  const low = Math.max(PLAN_MIN_DAYS, desiredDays - 1)
+  const high = desiredDays + 1
   return `${COMMON_RULES}
 
-你的任务：为学习者制定一份「约 30 天」的逐日学习计划。
+你的任务：为学习者制定一份「约 ${desiredDays} 天」的逐日学习计划。
 
 计划必须满足：
-- days 的长度在 28–32 之间（默认 30）。第 1 天是真正的入门，不能假设学习者已会任何前置知识（level=zero 时尤其如此）。
+- days 的长度必须接近 ${desiredDays} 天（${low}–${high} 之间，优先正好 ${desiredDays} 天）。第 1 天是真正的入门，不能假设学习者已会任何前置知识（level=zero 时尤其如此）。
 - 每天 3–5 个 task；同一天所有 task 的 estMinutes 之和 ≈ 学习者每天可投入的分钟数（允许 ±20%）。
 - 每个 task 的 kind 从 read / watch / practice / write / review / other 里选，比例合理：理解类（read/watch）不超过一半，必须有动手输出（practice/write）。
 - 每天的 checkpoints 给 2–4 条「可当场自检」的完成标志，比如「能不看资料写出 XX 的定义」「能独立算出 XX」，不要写「理解了」。
@@ -41,8 +51,10 @@ export function buildPlanSystem(): string {
 - 有资料时优先按资料的结构与术语来排；资料没覆盖的部分按学科常识补充，并在 goal 字段里注明是补充内容。`
 }
 
-export function buildPlanUser(input: PlanPromptInput): string {
+export function buildPlanUser(input: PlanPromptInput & { totalDays?: number; dailyMinutes?: number }): string {
   const { goal, materials } = input
+  const days = input.totalDays ?? PLAN_DEFAULT_DAYS
+  const minutes = input.dailyMinutes ?? goal.dailyMinutes
   const lines: string[] = []
   lines.push(`【学习目标】${goal.title}`)
   if (goal.description.trim() !== '') {
@@ -52,21 +64,23 @@ export function buildPlanUser(input: PlanPromptInput): string {
   lines.push(`【目标类型】${goal.kind}`)
   lines.push(`【当前水平】${goal.level}（zero=完全没学过，basic=知道一点，some=能上手但不成体系，good=比较熟，需要系统化）`)
   lines.push(`【目标日期】${goal.targetDate ?? '未指定'}`)
-  lines.push(`【每天可投入】${goal.dailyMinutes} 分钟`)
+  lines.push(`【每天可投入】${minutes} 分钟`)
+  lines.push(`【计划天数】${days} 天（请按这个天数排）`)
 
-  const usable = materials.filter((m) => m.content.trim() !== '').slice(0, 3)
+  // 资料份数不限；每份截到 1 万字，避免把上下文撑爆
+  const usable = materials.filter((m) => m.content.trim() !== '')
   if (usable.length > 0) {
     lines.push('')
     lines.push('【参考材料】（优先按这些材料的知识结构来排，术语要和材料一致）')
     usable.forEach((material, index) => {
       lines.push(`--- 材料 ${index + 1}：${material.title} ---`)
-      lines.push(clip(material.content, 5000))
+      lines.push(clip(material.content, MATERIAL_CLIP_CHARS))
     })
   }
 
   lines.push('')
   lines.push(
-    `【输出】按 schema 输出 json。totalDays 等于 days 长度；每天的 estMinutes 之和约 ${goal.dailyMinutes} 分钟；每天 3–5 个 task、2–4 条 checkpoints。`
+    `【输出】按 schema 输出 json。totalDays 等于 days 长度（约 ${days} 天）；每天的 estMinutes 之和约 ${minutes} 分钟；每天 3–5 个 task、2–4 条 checkpoints。`
   )
   return lines.join('\n')
 }
@@ -289,13 +303,14 @@ export function buildLessonUser(input: LessonPromptInput): string {
     })
   }
 
-  const usable = materials.filter((m) => m.content.trim() !== '').slice(0, 3)
+  // 资料份数不限；每份截到 MATERIAL_CLIP_CHARS 字，避免单份把上下文撑爆
+  const usable = materials.filter((m) => m.content.trim() !== '')
   if (usable.length > 0) {
     lines.push('')
     lines.push('【参考材料】（讲解要对齐这些材料的术语与结构）')
     usable.forEach((material, index) => {
       lines.push(`--- 材料 ${index + 1}：${material.title} ---`)
-      lines.push(clip(material.content, 6000))
+      lines.push(clip(material.content, MATERIAL_CLIP_CHARS))
     })
   }
 

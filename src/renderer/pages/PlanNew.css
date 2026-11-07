@@ -75,6 +75,82 @@
   border-top: 1px solid var(--c-hairline);
 }
 
+/* ---------- 顶部工具行 / 当前计划 ---------- */
+
+.sf-plan__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.sf-plan__toolbar .sf-faint {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sf-plan__current {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--s-2);
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--c-surface-sunken);
+  border: 1px solid var(--c-border);
+}
+
+.sf-plan__current > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sf-plan__current span {
+  font-size: var(--fs-2xs);
+  color: var(--c-text-3);
+}
+
+.sf-plan__current strong {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  color: var(--c-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- 天数 / 每日投入 输入行 ---------- */
+
+.sf-plan__params {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-3);
+  align-items: start;
+}
+
+/* ---------- 弹窗表单 ---------- */
+
+.sf-plan__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.sf-plan__form-error {
+  margin: 0;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--c-danger-line);
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
+  font-size: var(--fs-sm);
+  line-height: 1.55;
+}
+
 /* ---------- 生成中 ---------- */
 
 .sf-plan__gen {
@@ -368,6 +444,18 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .sf-plan__current {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .sf-plan__current > div:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .sf-plan__params {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .sf-plan__save {
     flex-direction: column;
     align-items: stretch;
@@ -407,8 +495,12 @@
   flex-direction: column;
   gap: var(--s-1);
   margin: 0;
-  padding: 0;
+  padding: 0 var(--s-1) 0 0;
   list-style: none;
+  /* 资料份数不限：列表超过这个高度就在卡内滚动，避免把整页顶长 */
+  max-height: 280px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .sf-plan__mat {

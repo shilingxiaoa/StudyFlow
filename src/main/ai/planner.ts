@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 生成计划：goal（+ 资料）→ GeneratedPlan（约 30 天，每天 3–5 个任务）。
  * AI 的输出在这里做「落地前的整形」：天数、任务数、检查点数量、分钟数配平。
  */
@@ -7,10 +7,10 @@ import { AppError } from '../ipc/handle'
 import { PLAN_TIMEOUT_MS, responsesJSON } from './client'
 import { PLAN_SCHEMA } from './schemas'
 import type { PlanAi, PlanDayAi } from './schemas'
-import { buildPlanSystem, buildPlanUser } from './prompts'
+import { PLAN_DEFAULT_DAYS, PLAN_MAX_DAYS, PLAN_MIN_DAYS, buildPlanSystem, buildPlanUser } from './prompts'
 
-const MAX_DAYS = 45
-const MIN_DAYS = 7
+const MAX_DAYS = PLAN_MAX_DAYS
+const MIN_DAYS = 1
 const MIN_TASK_MINUTES = 5
 const MAX_TASK_MINUTES = 240
 
@@ -130,6 +130,10 @@ export function normalizePlan(ai: PlanAi, dailyMinutes: number): GeneratedPlan {
 
 export interface GeneratePlanOptions {
   timeoutMs?: number
+  /** 期望天数（1–120），不传按 30 天 */
+  totalDays?: number
+  /** 每天可投入分钟（覆盖目标里的 dailyMinutes） */
+  dailyMinutes?: number
 }
 
 /** 调 AI 生成计划（入库由 plan:save 负责，生成不落库） */
@@ -138,13 +142,21 @@ export async function generatePlan(
   materials: readonly Material[],
   options: GeneratePlanOptions = {}
 ): Promise<GeneratedPlan> {
+  const desiredDays = clampNumber(
+    Math.round(options.totalDays ?? PLAN_DEFAULT_DAYS),
+    PLAN_MIN_DAYS,
+    PLAN_MAX_DAYS
+  )
+  const dailyMinutes = clampNumber(Math.round(options.dailyMinutes ?? goal.dailyMinutes), 20, 600)
+  // 让「约 30 天」之类的文案与真实天数一致，避免模型按旧措辞只排 30 天
+  const goalForPrompt: Goal = dailyMinutes === goal.dailyMinutes ? goal : { ...goal, dailyMinutes }
   const ai = await responsesJSON<PlanAi>({
     scene: 'plan',
-    system: buildPlanSystem(),
-    user: buildPlanUser({ goal, materials }),
+    system: buildPlanSystem(desiredDays),
+    user: buildPlanUser({ goal: goalForPrompt, materials, totalDays: desiredDays, dailyMinutes }),
     schema: PLAN_SCHEMA,
     timeoutMs: options.timeoutMs ?? PLAN_TIMEOUT_MS,
     maxOutputTokens: 16_000
   })
-  return normalizePlan(ai, goal.dailyMinutes)
+  return normalizePlan(ai, dailyMinutes)
 }

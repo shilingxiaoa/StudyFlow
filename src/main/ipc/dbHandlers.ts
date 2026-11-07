@@ -161,6 +161,25 @@ export function registerDbHandlers(): void {
     return { id }
   })
 
+  handle<unknown, Awaited<ReturnType<typeof repo.updatePlan>>>(IPC.PLAN_UPDATE, (payload) => {
+    const record = asRecord(payload)
+    const planId = requireId(payload, '计划 id', 'planId', 'id')
+    const input: {
+      planId: string
+      title?: string
+      totalDays?: number
+    } = { planId }
+    if ('title' in record && record.title !== null && record.title !== undefined) {
+      input.title = String(record.title)
+    }
+    if ('totalDays' in record && record.totalDays !== null && record.totalDays !== undefined) {
+      const value = Number(record.totalDays)
+      if (!Number.isFinite(value)) throw new AppError('VALIDATION', '计划天数要填数字')
+      input.totalDays = Math.round(value)
+    }
+    return repo.updatePlan(input)
+  })
+
   handle<unknown, Awaited<ReturnType<typeof repo.setActiveContext>>>(IPC.CONTEXT_SET, (payload) => {
     const record = asRecord(payload)
     // 字段缺省 = 不变；显式 null /空串 = 清空

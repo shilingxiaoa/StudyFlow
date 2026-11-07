@@ -152,6 +152,19 @@
     )
     const lastDayId = allDays[allDays.length - 1] && allDays[allDays.length - 1].id
 
+    // 2.1 计划编辑：能改标题；不能直接加天数（要重新生成）
+    const renamed = await must('plan:update/改标题', 'plan:update', {
+      planId: plan.id,
+      title: 'Python 速通 · 改过的标题'
+    })
+    record('plan:update 改标题生效', renamed.title === 'Python 速通 · 改过的标题', {
+      title: renamed.title
+    })
+    await expectError('plan:update 加天数被拒（VALIDATION）', 'plan:update', {
+      planId: plan.id,
+      totalDays: 10
+    }, 'VALIDATION')
+
     // 3. 首屏状态
     let boot2 = await must('bootstrap/建计划后', 'app:bootstrap')
     record('bootstrap 数据完整', Boolean(boot2.activePlan && boot2.todayDay && boot2.progress), {
@@ -309,6 +322,18 @@
         boot4.activePlan.goalId === goal2.id &&
         boot4.plans.length === 1,
       { activeGoalId: boot4.activeGoalId, plans: boot4.plans.length }
+    )
+
+    // 2.2 缩减天数：2 天 → 1 天（尾部 Day 没有学习记录，允许删）
+    const shrunk = await must('plan:update/缩减天数', 'plan:update', {
+      planId: plan2.id,
+      totalDays: 1
+    })
+    const goal2Days = await must('day:list（缩减后）', 'day:list', { goalId: goal2.id })
+    record(
+      'plan:update 缩减天数后 Day 跟着减少',
+      shrunk.totalDays === 1 && goal2Days.length === 1,
+      { planDays: shrunk.totalDays, dbDays: goal2Days.length }
     )
 
     // 切回第一个目标：计划、进度、今日 Day 都要跟着换

@@ -32,9 +32,10 @@ function round1(value: number): number {
   return Math.round(value * 10) / 10
 }
 
-const MATERIAL_EXCERPT_LIMIT = 4_000
+/** 出题时参考资料的总字数上限（份数不限，合计截断） */
+const MATERIAL_EXCERPT_LIMIT = 10_000
 
-/** 资料拼给模型用：每份截断，总量截断，避免超长 prompt */
+/** 资料拼给模型用：份数不限，合计截断，避免超长 prompt */
 function materialExcerpt(materials: readonly { title: string; content: string }[]): string {
   if (materials.length === 0) return ''
   return materials
@@ -192,11 +193,32 @@ export function registerAiHandlers(): void {
   // ───────── 计划生成 ─────────
   handle<unknown, GeneratedPlan>(IPC.PLAN_GENERATE, async (payload) => {
     await assertApiKey()
+    const record = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : {}
     const goalId = requireId(payload, '目标 id', 'goalId', 'id')
+    const rawDays = record['totalDays']
+    const rawMinutes = record['dailyMinutes']
+    const totalDays =
+      rawDays === undefined || rawDays === null ? undefined : Number(rawDays)
+    const dailyMinutes =
+      rawMinutes === undefined || rawMinutes === null ? undefined : Number(rawMinutes)
+    if (totalDays !== undefined && (!Number.isFinite(totalDays) || totalDays < 1 || totalDays > 120)) {
+      throw new AppError('VALIDATION', '计划天数要在 1–120 天之间')
+    }
+    if (
+      dailyMinutes !== undefined &&
+      (!Number.isFinite(dailyMinutes) || dailyMinutes < 20 || dailyMinutes > 600)
+    ) {
+      throw new AppError('VALIDATION', '每日投入要在 20–600 分钟之间')
+    }
+
     const goal = await repo.getGoal(goalId)
     if (!goal) throw new AppError('NOT_FOUND', '学习目标不存在')
+    // 用户在生成前调整了每日投入：同步写回目标，之后的教案/出题也按新时长排
+    if (dailyMinutes !== undefined && Math.round(dailyMinutes) !== goal.dailyMinutes) {
+      await repo.updateGoal(goalId, { dailyMinutes: Math.round(dailyMinutes) })
+    }
     const materials = await repo.listMaterials(goalId)
-    return generatePlan(goal, materials)
+    return generatePlan(goal, materials, { totalDays, dailyMinutes })
   })
 
   // ───────── 考试：出题（隐藏要点绝不下发） ─────────

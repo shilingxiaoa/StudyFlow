@@ -82,6 +82,22 @@ export interface GeneratedPlan {
   days: GeneratedDay[];
 }
 
+/** 生成计划的可选参数：这一次想要几天、每天多少分钟（不传就用目标里的默认值） */
+export interface PlanGenerateInput {
+  goalId: string;
+  /** 期望天数，1–120；不传按 30 天 */
+  totalDays?: number;
+  /** 每天可投入分钟数，10–600；传了会同步写回目标 */
+  dailyMinutes?: number;
+}
+
+/** 调整已有计划：改名、缩减天数（要加天数请重新生成计划） */
+export interface PlanUpdateInput {
+  planId: string;
+  title?: string;
+  totalDays?: number;
+}
+
 export interface GeneratedDay {
   index: number;
   title: string;
@@ -467,6 +483,7 @@ export const IPC = {
 
   PLAN_GENERATE: 'plan:generate',
   PLAN_SAVE: 'plan:save',
+  PLAN_UPDATE: 'plan:update',
   PLAN_LIST: 'plan:list',
   PLAN_DELETE: 'plan:delete',
 

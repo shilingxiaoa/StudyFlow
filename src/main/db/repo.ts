@@ -31,6 +31,7 @@ import type {
   MaterialKind,
   Plan,
   PlanSummary,
+  PlanUpdateInput,
   ProgressEvent,
   ProgressSummary,
   Question,
@@ -906,6 +907,107 @@ export async function listPlans(goalId?: string): Promise<PlanSummary[]> {
     [goalId ?? null, goalId ?? null]
   )
   return rows.map(toPlanSummary)
+}
+
+/**
+ * 调整已有计划：改标题、缩减天数。
+ * 增天数不在这里做（要 AI 重新排内容），由 plan:generate + plan:save 负责。
+ */
+export async function updatePlan(input: PlanUpdateInput): Promise<Plan> {
+  await ensureReady()
+  const planId = String(input.planId ?? '').trim()
+  if (planId === '') throw new AppError('VALIDATION', '缺少计划 id')
+
+  const row = get<Row>('SELECT * FROM plan WHERE id = ?', [planId])
+  if (!row) throw new AppError('NOT_FOUND', '计划不存在')
+  const goalId = s(row.goal_id)
+  const currentDays = Math.round(n(row.total_days))
+  const sets: string[] = []
+  const params: (string | number | null)[] = []
+
+  if (input.title !== undefined) {
+    const title = String(input.title).trim()
+    if (title === '') throw new AppError('VALIDATION', '计划标题不能为空')
+    sets.push('title = ?')
+    params.push(title.slice(0, 60))
+  }
+
+  let removedDays = 0
+  let nextDays = currentDays
+  if (input.totalDays !== undefined) {
+    const target = Math.round(Number(input.totalDays))
+    if (!Number.isFinite(target) || target < 1) {
+      throw new AppError('VALIDATION', '计划天数至少 1 天')
+    }
+    if (target > currentDays) {
+      throw new AppError(
+        'VALIDATION',
+        `当前计划只有 ${currentDays} 天，只能缩减；要增加天数请重新生成计划`
+      )
+    }
+    nextDays = target
+    removedDays = currentDays - target
+  }
+
+  if (sets.length === 0 && removedDays === 0) {
+    throw new AppError('VALIDATION', '没有需要修改的内容')
+  }
+
+  transaction(() => {
+    if (removedDays > 0) {
+      const doomed = all<Row>('SELECT id, idx, status FROM day WHERE plan_id = ? AND idx > ?', [
+        planId,
+        nextDays
+      ])
+      const touched = doomed.filter((day) => s(day.status) !== 'learning')
+      const withWork =
+        doomed.length === 0
+          ? []
+          : all<Row>(
+              `SELECT d.idx AS idx FROM day d JOIN task t ON t.day_id = d.id
+                WHERE d.plan_id = ? AND d.idx > ? AND t.status <> 'todo'
+                LIMIT 1`,
+              [planId, nextDays]
+            )
+      const blockedDay = touched[0]?.idx ?? withWork[0]?.idx
+      if (blockedDay !== undefined) {
+        throw new AppError(
+          'VALIDATION',
+          `第 ${blockedDay} 天起已经有学习记录，不能直接缩减；要缩短请重新生成计划`
+        )
+      }
+      const doomedIds = doomed.map((day) => s(day.id))
+      if (doomedIds.length > 0) {
+        const placeholders = doomedIds.map(() => '?').join(', ')
+        run(`DELETE FROM task WHERE day_id IN (${placeholders})`, doomedIds)
+        run(`DELETE FROM lesson WHERE day_id IN (${placeholders})`, doomedIds)
+        run(`DELETE FROM exam WHERE day_id IN (${placeholders})`, doomedIds)
+        run(`DELETE FROM day WHERE id IN (${placeholders})`, doomedIds)
+      }
+      const totalMinutes = Math.round(
+        n(
+          get<Row>(
+            `SELECT COALESCE(SUM(t.est_minutes), 0) AS m
+               FROM task t JOIN day d ON d.id = t.day_id
+              WHERE d.plan_id = ?`,
+            [planId]
+          )?.m,
+          0
+        )
+      )
+      sets.push('total_days = ?', 'total_minutes = ?')
+      params.push(nextDays, totalMinutes)
+    }
+    if (sets.length > 0) {
+      run(`UPDATE plan SET ${sets.join(', ')} WHERE id = ?`, [...params, planId])
+    }
+  })
+
+  persist()
+  pushProgress(goalId)
+  const updated = get<Row>('SELECT * FROM plan WHERE id = ?', [planId])
+  if (!updated) throw new AppError('DB', '保存计划失败')
+  return toPlan(updated)
 }
 
 export async function deletePlan(id: string): Promise<void> {
